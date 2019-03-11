@@ -1,0 +1,21 @@
+language: ruby
+sudo: false
+
+notifications:
+  email: false
+
+rvm:
+  - 2.3.1
+
+before_install:
+  - gem install bundler
+
+notifications:
+  irc: "irc.freenode.org#blacklight"
+  email:
+      - blacklight-commits@googlegroups.com
+
+global_env:
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true
+  
+jdk: oraclejdk8
