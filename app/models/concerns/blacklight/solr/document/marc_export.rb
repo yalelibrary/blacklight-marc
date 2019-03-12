@@ -574,41 +574,41 @@ module Blacklight::Solr::Document::MarcExport
 
   def to_object
     doc = {}
-    # Unfortunately need a lot of defensive coding due to
-    # potential non-existence of fields
-    doc['author'] = to_marc['100']['a'] if to_marc['100']
-    doc['isbn'] = to_marc['20']['a'] if to_marc['20']
-    doc['issn'] = to_marc['22']['a'] if to_marc['22']
-    doc['url'] = to_marc['856']['u'] if to_marc['856']
-    doc['edition'] = to_marc['250']['a'] if to_marc['250']
-    doc['add_entry'] = to_marc['700']['a'] if to_marc['700']
-    doc['num_pages'] = to_marc['300']['a'] if to_marc['300']
-    doc['cite_as'] = to_marc['524']['a'] if to_marc['524']
-    doc['scale'] = to_marc['255']['a'] if to_marc['255']
+    # We'll use the && operator to short circuit if the MARC record
+    # is missing and if not, we'll set it to second value of condition
+    # Some fields are either/or, some are both (if present)
+    
+    doc['isbn']       =   to_marc['20'] && to_marc['20']['a']
+    doc['issn']       =   to_marc['22'] && to_marc['22']['a']
+    doc['author']     =   to_marc['100'] && to_marc['100']['a']
+    doc['edition']    =   to_marc['250'] && to_marc['250']['a']
+    doc['scale']      =   to_marc['255'] && to_marc['255']['a']
+    doc['num_pages']  =   to_marc['300'] && to_marc['300']['a']
+    doc['cite_as']   =    to_marc['524'] && to_marc['524']['a']
+    doc['add_entry'] =    to_marc['700'] && to_marc['700']['a']
+    doc['url']       =    to_marc['856'] && to_marc['856']['u']
+   
+    # Publisher information could be in MARC record 260
+    # or 264, so just pick whichever one we find data
+    
+    doc['pub_place']  =  (to_marc['260'] && to_marc['260']['a']) || 
+                         (to_marc['264'] && to_marc['264']['a'])
+    doc['publisher']  =  (to_marc['260'] && to_marc['260']['b']) || 
+                         (to_marc['264'] && to_marc['264']['b'])
+    doc['pub_date']   =  (to_marc['260'] && to_marc['260']['c']) || 
+                         (to_marc['264'] && to_marc['264']['c'])
 
-    # these fields could be either/or
-    if to_marc['260']
-      doc['pub_place'] = to_marc['260']['a']
-      doc['pub_date'] = to_marc['260']['c']
-      doc['publisher'] = to_marc['260']['b']
-    elsif to_marc['264']
-      doc['pub_place'] = to_marc['264']['a']
-      doc['pub_date'] = to_marc['264']['c']
-      doc['publisher'] = to_marc['264']['b']
-    end
+    # Title could be in both fields so join them together
+    # Which is safe if one of he fields is nil
 
-    # these could be either/or/both
-    doc['title'] = '' 
-    if to_marc['245']
-      doc['title'] += to_marc['245']['a'] if to_marc['245']['a']
-      doc['title'] += to_marc['245']['b'] if to_marc['245']['b']
-    end
+    doc['title']      =   to_marc['245'] && 
+                         [to_marc['245']['a'], to_marc['245']['b']].join("").presence
 
-    doc['series'] = ''
-    if to_marc['440']
-      doc['series'] += to_marc['440']['a'] if to_marc['440']['a']
-      doc['title'] += to_marc['490']['b'] if to_marc['490']['b']
-    end
+    # Special case where series could be in both these disparate fields
+    # Only assign value if the join actually produces actual data
+
+    doc['series']     =   [to_marc['440'] && to_marc['440']['a'],
+                           to_marc['490'] && to_marc['490']['a']].join().presence
 
     doc
   end
