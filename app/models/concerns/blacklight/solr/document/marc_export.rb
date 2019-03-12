@@ -157,6 +157,9 @@ module Blacklight::Solr::Document::MarcExport
     # TODO. This should be rewritten to guess
     # from actual Marc instead, probably.
     format_str = 'Generic'
+
+    # i'm just debugging
+    to_object
     
     text = ''
     text << "%0 #{ format_str }\n"
@@ -173,7 +176,6 @@ module Blacklight::Solr::Document::MarcExport
       
       if marc_obj[first_value[0].to_s]
         marc_obj.find_all{|f| (first_value[0].to_s) === f.tag}.each do |field|
-          # byebug if (field.tag == "260" || field.tag == "264")
           if field[first_value[1]].to_s or field[second_value[1]].to_s
             text << "#{key.gsub('_','')}"
             if field[first_value[1]].to_s
@@ -565,22 +567,49 @@ module Blacklight::Solr::Document::MarcExport
     return temp_name.last + " " + temp_name.first
   end 
 
+  # Convert our Marc citation fields to easily accessible
+  # hash to share functionality across citations
+  # Would be good to use hash.dig('100', 'a') but to_marc.to_hash
+  # creates a pretty ugly hash that wasn't easily dig-ged
+
   def to_object
     doc = {}
-    doc['author'] = to_marc['100']['a']
-    doc['pub_place'] = to_marc['260']['a'] || to_marc['264']['a']
-    doc['pub_date'] = to_marc['260']['c'] || to_marc['264']['c']
-    doc['publisher'] = to_marc['260']['b'] || to_marc['264']['b']
-    doc['series'] = "#{to_marc['440']['a']} #{to_marc['490']['a']}"
-    doc['isbn'] = to_marc['20']['a']
-    doc['issn'] = to_marc['22']['a']
-    doc['title'] = "#{to_marc['245']['a']} #{to_marc['245']['b']}"
-    doc['url'] = to_marc['856']['u']
-    doc['edition'] = to_marc['250']['a']
-    doc['add_entry'] = to_marc['700']['a']
-    doc['num_pages'] = to_marc['300']['a']
-    doc['cite_as'] = to_marc['524']['a']
-    doc['scale'] = to_marc['255']['a']
+    # Unfortunately need a lot of defensive coding due to
+    # potential non-existence of fields
+    doc['author'] = to_marc['100']['a'] if to_marc['100']
+    doc['isbn'] = to_marc['20']['a'] if to_marc['20']
+    doc['issn'] = to_marc['22']['a'] if to_marc['22']
+    doc['url'] = to_marc['856']['u'] if to_marc['856']
+    doc['edition'] = to_marc['250']['a'] if to_marc['250']
+    doc['add_entry'] = to_marc['700']['a'] if to_marc['700']
+    doc['num_pages'] = to_marc['300']['a'] if to_marc['300']
+    doc['cite_as'] = to_marc['524']['a'] if to_marc['524']
+    doc['scale'] = to_marc['255']['a'] if to_marc['255']
+
+    # these fields could be either/or
+    if to_marc['260']
+      doc['pub_place'] = to_marc['260']['a']
+      doc['pub_date'] = to_marc['260']['c']
+      doc['publisher'] = to_marc['260']['b']
+    elsif to_marc['264']
+      doc['pub_place'] = to_marc['264']['a']
+      doc['pub_date'] = to_marc['264']['c']
+      doc['publisher'] = to_marc['264']['b']
+    end
+
+    # these could be either/or/both
+    doc['title'] = '' 
+    if to_marc['245']
+      doc['title'] += to_marc['245']['a'] if to_marc['245']['a']
+      doc['title'] += to_marc['245']['b'] if to_marc['245']['b']
+    end
+
+    doc['series'] = ''
+    if to_marc['440']
+      doc['series'] += to_marc['440']['a'] if to_marc['440']['a']
+      doc['title'] += to_marc['490']['b'] if to_marc['490']['b']
+    end
+
     doc
   end
   
