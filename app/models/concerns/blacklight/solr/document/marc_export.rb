@@ -141,52 +141,35 @@ module Blacklight::Solr::Document::MarcExport
   # purpose. 
   def export_as_endnote()
     end_note_format = {
-      "%A" => "100.a",
-      "%C" => "260.a",
-      "%D" => "260.c",
-      "%E" => "700.a",
-      "%I" => "260.b",
-      "%J" => "440.a",
-      "%@" => "020.a",
-      "%_@" => "022.a",
-      "%T" => "245.a,245.b",
-      "%U" => "856.u",
-      "%7" => "250.a"
+      "%A" => "author",
+      "%C" => "pub_place",
+      "%D" => "pub_date",
+      "%E" => "add_entry",
+      "%I" => "publisher",
+      "%J" => "series",
+      "%@" => "isbn",
+      "%_@" => "issn",
+      "%T" => "title",
+      "%U" => "url",
+      "%7" => "edition"
     }
     marc_obj = to_marc
     # TODO. This should be rewritten to guess
     # from actual Marc instead, probably.
     format_str = 'Generic'
 
-    # i'm just debugging
-    to_object
+    # convert marc data to object hash
+    doc_info = to_object
     
     text = ''
     text << "%0 #{ format_str }\n"
-    # If there is some reliable way of getting the language of a record we can add it here
-    #text << "%G #{record['language'].first}\n"
+
+    # For each endnote field, check to see if our doc_info value has something
+    # If so, send it into the text, otherwise don't do anything
+    
     end_note_format.each do |key,value|
-      values = value.split(",")
-      first_value = values[0].split('.')
-      if values.length > 1
-        second_value = values[1].split('.')
-      else
-        second_value = []
-      end
-      
-      if marc_obj[first_value[0].to_s]
-        marc_obj.find_all{|f| (first_value[0].to_s) === f.tag}.each do |field|
-          if field[first_value[1]].to_s or field[second_value[1]].to_s
-            text << "#{key.gsub('_','')}"
-            if field[first_value[1]].to_s
-              text << " #{field[first_value[1]].to_s}"
-            end
-            if field[second_value[1]].to_s
-              text << " #{field[second_value[1]].to_s}"
-            end
-            text << "\n"
-          end
-        end
+      unless doc_info[value].nil?
+        text << "#{key} #{doc_info[value]}\n"
       end
     end
     text
@@ -577,9 +560,9 @@ module Blacklight::Solr::Document::MarcExport
     # We'll use the && operator to short circuit if the MARC record
     # is missing and if not, we'll set it to second value of condition
     # Some fields are either/or, some are both (if present)
-    
-    doc['isbn']       =   to_marc['20'] && to_marc['20']['a']
-    doc['issn']       =   to_marc['22'] && to_marc['22']['a']
+
+    doc['isbn']       =   to_marc['020'] && to_marc['020']['a']
+    doc['issn']       =   to_marc['022'] && to_marc['022']['a']
     doc['author']     =   to_marc['100'] && to_marc['100']['a']
     doc['edition']    =   to_marc['250'] && to_marc['250']['a']
     doc['scale']      =   to_marc['255'] && to_marc['255']['a']
@@ -609,6 +592,17 @@ module Blacklight::Solr::Document::MarcExport
 
     doc['series']     =   [to_marc['440'] && to_marc['440']['a'],
                            to_marc['490'] && to_marc['490']['a']].join().presence
+
+    # clean up trailing commas, colons, clashes
+
+    doc.each do |key, value|
+      unless doc[key].nil?
+        doc[key].chomp!(',')
+        doc[key].chomp!(':')
+        doc[key].chomp!('/')
+        doc[key].chomp!(';')
+      end
+    end
 
     doc
   end
