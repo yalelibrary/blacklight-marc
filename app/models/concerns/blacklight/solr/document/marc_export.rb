@@ -561,7 +561,7 @@ module Blacklight::Solr::Document::MarcExport
     # is missing and if not, we'll set it to second value of condition
     # Some fields are either/or, some are both (if present)
 
-    doc['isbn']       =   to_marc['020'] && to_marc['020']['a']
+    doc['isbn']       =   record_to_text('020')
     doc['issn']       =   to_marc['022'] && to_marc['022']['a']
     doc['author']     =   to_marc['100'] && to_marc['100']['a']
     doc['edition']    =   to_marc['250'] && to_marc['250']['a']
@@ -605,6 +605,15 @@ module Blacklight::Solr::Document::MarcExport
     end
 
     doc
+  end
+
+  def record_to_text(marc_field)
+    marc_text = ""
+    to_marc.find_all{|f| marc_field === f.tag}.each do |entry|
+      marc_text << entry.value
+      marc_text << "\n"
+    end
+    marc_text
   end
   
 end
