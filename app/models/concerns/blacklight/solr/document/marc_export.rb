@@ -153,23 +153,24 @@ module Blacklight::Solr::Document::MarcExport
       "%U" => "url",
       "%7" => "edition"
     }
-    marc_obj = to_marc
+    
     # TODO. This should be rewritten to guess
     # from actual Marc instead, probably.
     format_str = 'Generic'
 
     # convert marc data to object hash
-    doc_info = to_object
+    marc_object = to_object
     
     text = ''
     text << "%0 #{ format_str }\n"
 
-    # For each endnote field, check to see if our doc_info value has something
-    # If so, send it into the text, otherwise don't do anything
+    # For each value in our end_note_format hash, iterate through
+    # all marc_object fields and put them into string
+    # Each marc_object could have 0 or more strings in array
     
-    end_note_format.each do |key,value|
-      unless doc_info[value].nil?
-        text << "#{key} #{doc_info[value]}\n"
+    end_note_format.each do |endnote_key,marc_key|
+      marc_object[marc_key].each do |marc_value|
+        text << "#{endnote_key} #{marc_value}\n"
       end
     end
     text
@@ -561,59 +562,55 @@ module Blacklight::Solr::Document::MarcExport
     # is missing and if not, we'll set it to second value of condition
     # Some fields are either/or, some are both (if present)
 
-    doc['isbn']       =   record_to_text('020')
-    doc['issn']       =   to_marc['022'] && to_marc['022']['a']
-    doc['author']     =   to_marc['100'] && to_marc['100']['a']
-    doc['edition']    =   to_marc['250'] && to_marc['250']['a']
-    doc['scale']      =   to_marc['255'] && to_marc['255']['a']
-    doc['num_pages']  =   to_marc['300'] && to_marc['300']['a']
-    doc['cite_as']   =    to_marc['524'] && to_marc['524']['a']
-    doc['add_entry'] =    to_marc['700'] && to_marc['700']['a']
-    doc['url']       =    to_marc['856'] && to_marc['856']['u']
+    doc['isbn']       =   record_to_array('020.a')
+    doc['issn']       =   record_to_array('022.b')
+    doc['author']     =   record_to_array('100.a')
+    doc['edition']    =   record_to_array('250.a')
+    doc['scale']      =   record_to_array('255.a')
+    doc['num_pages']  =   record_to_array('300.a')
+    doc['cite_as']   =    record_to_array('524.a')
+    doc['add_entry'] =    record_to_array('700.a')
+    doc['url']       =    record_to_array('856.u')
    
-    # Publisher information could be in MARC record 260
-    # or 264, so just pick whichever one we find data
+    # Publisher, title, series could have multiple fields
+    # So just join the arrays together
     
-    doc['pub_place']  =  (to_marc['260'] && to_marc['260']['a']) || 
-                         (to_marc['264'] && to_marc['264']['a'])
-    doc['publisher']  =  (to_marc['260'] && to_marc['260']['b']) || 
-                         (to_marc['264'] && to_marc['264']['b'])
-    doc['pub_date']   =  (to_marc['260'] && to_marc['260']['c']) || 
-                         (to_marc['264'] && to_marc['264']['c'])
-
-    # Title could be in both fields so join them together
-    # Which is safe if one of he fields is nil
-
-    doc['title']      =   to_marc['245'] && 
-                         [to_marc['245']['a'], to_marc['245']['b']].join("").presence
-
-    # Special case where series could be in both these disparate fields
-    # Only assign value if the join actually produces actual data
-
-    doc['series']     =   [to_marc['440'] && to_marc['440']['a'],
-                           to_marc['490'] && to_marc['490']['a']].join().presence
-
-    # clean up trailing commas, colons, clashes
-
-    doc.each do |key, value|
-      unless doc[key].nil?
-        doc[key].chomp!(',')
-        doc[key].chomp!(':')
-        doc[key].chomp!('/')
-        doc[key].chomp!(';')
-      end
-    end
+    doc['pub_place'] =    record_to_array('260.a') +
+                          record_to_array('264.a')
+    doc['publisher']  =   record_to_array('260.b') +
+                          record_to_array('264.b')
+    doc['pub_date']   =   record_to_array('260.c') +
+                          record_to_array('264.c')
+    doc['title']      =   record_to_array('245.a') +
+                          record_to_array('245.b')
+    doc['series']     =   record_to_array('440.a') +
+                          record_to_array('490.a')
 
     doc
   end
 
-  def record_to_text(marc_field)
-    marc_text = ""
-    to_marc.find_all{|f| marc_field === f.tag}.each do |entry|
-      marc_text << entry.value
-      marc_text << "\n"
+  def record_to_array(marc_field)
+    record_values = []
+    fields = marc_field.split('.')
+    marc_field = fields[0]
+    sub_field = fields[1]
+    to_marc.find_all{|f| marc_field == f.tag}.each do |entry|
+      unless entry[sub_field].nil? 
+        record_values.push(entry[sub_field])
+        # or clean the record first
+        # record_values.push(clean_record(entry[sub_field])
+      end
     end
-    marc_text
+    record_values
   end
+
+  def clean_record(record_text)
+    record_text.chomp!(',')
+    record_text.chomp!(':')
+    record_text.chomp!('/')
+    record_text.chomp!(';')
+    record_text
+  end
+ 
   
 end
