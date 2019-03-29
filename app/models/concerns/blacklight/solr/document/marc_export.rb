@@ -150,6 +150,7 @@ module Blacklight::Solr::Document::MarcExport
       "%@" => "isbn",
       "%_@" => "issn",
       "%T" => "title",
+      "%P" => "num_pages",
       "%U" => "url",
       "%7" => "edition"
     }
