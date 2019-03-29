@@ -154,15 +154,10 @@ module Blacklight::Solr::Document::MarcExport
       "%7" => "edition"
     }
     
-    # TODO. This should be rewritten to guess
-    # from actual Marc instead, probably.
-    format_str = 'Generic'
-
     # convert marc data to object hash
     marc_object = to_object
     
     text = ''
-    text << "%0 #{ format_str }\n"
 
     # For each value in our end_note_format hash, iterate through
     # all marc_object fields and put them into string
@@ -551,16 +546,13 @@ module Blacklight::Solr::Document::MarcExport
     return temp_name.last + " " + temp_name.first
   end 
 
-  # Convert our Marc citation fields to easily accessible
-  # hash to share functionality across citations
-  # Would be good to use hash.dig('100', 'a') but to_marc.to_hash
-  # creates a pretty ugly hash that wasn't easily dig-ged
-
+  # This method will turn our marc records into a Hash of arrays
+  # Where each key will give 0 or more results
+  # Ex: doc['isbn'] will be [] if no results are found
+  # Ex: doc['isbn'] could be ['1234', '5678'] of several records found
+  
   def to_object
     doc = {}
-    # We'll use the && operator to short circuit if the MARC record
-    # is missing and if not, we'll set it to second value of condition
-    # Some fields are either/or, some are both (if present)
 
     doc['isbn']       =   record_to_array('020.a')
     doc['issn']       =   record_to_array('022.b')
@@ -589,11 +581,12 @@ module Blacklight::Solr::Document::MarcExport
     doc
   end
 
+  # This takes an individual MARC field and turns it into 
+  # 0 or more members of an array for to_object
+
   def record_to_array(marc_field)
     record_values = []
-    fields = marc_field.split('.')
-    marc_field = fields[0]
-    sub_field = fields[1]
+    marc_field, sub_field = marc_field.split('.')
     to_marc.find_all{|f| marc_field == f.tag}.each do |entry|
       unless entry[sub_field].nil? 
         record_values.push(entry[sub_field])
@@ -603,6 +596,9 @@ module Blacklight::Solr::Document::MarcExport
     end
     record_values
   end
+
+  # Utility function to clean up trailing data inside record_to_array
+  # Before exporting it to a citation document
 
   def clean_record(record_text)
     record_text.chomp!(',')
