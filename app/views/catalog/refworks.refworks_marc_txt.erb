@@ -1,6 +1,14 @@
-<%= form_tag refworks_export_url, :name => "refworks", :method => 'POST',:role => 'form', :target => "_blank", :id => "refworks-form" do %>
-<%= text_area_tag 'ImportData', render_refworks_texts(@documents) %>
-<br>
-<%= submit_tag t('blacklight.tools.refworks'), :class => 'submit btn btn-default'%>
-<% end %>
-
+<div class = "refworks-export">
+	<h2 class="modal-title"><%= t('blacklight.tools.refworks') %></h2>
+	<h4>If you are not redirected to RefWorks, please click the button below to export again.</h4>
+	<%= form_tag refworks_export_url, :name => "refworks", :method => 'POST',:role => 'form', :id => "refworks-form" do %>
+		<br>
+		<%= submit_tag t('blacklight.tools.refworks'), :class => 'submit btn btn-default'%>
+			<br>
+			<br>
+		<%= text_area_tag 'ImportData', render_refworks_texts(@documents), :rows => '60', :cols=>'150'  %>
+	<% end %>
+	<script type="text/javascript">
+		 window.onload = document.refworks.submit();
+	</script>
+</div>
