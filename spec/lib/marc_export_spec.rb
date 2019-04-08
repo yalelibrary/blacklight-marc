@@ -694,15 +694,15 @@ describe Blacklight::Solr::Document::MarcExport do
         endnote_entries[$1] << $2
       end
 
-      expect(endnote_entries["0"]).to eq(Set.new(["Generic"])) # I have no idea WHY this is correct, it is definitely not legal, but taking from earlier test for render_endnote in applicationhelper, the previous version of this.  jrochkind.
-      expect(endnote_entries["D"]).to eq(Set.new(["p2001. "]))
-      expect(endnote_entries["C"]).to eq(Set.new(["[United States] : "]))
-      expect(endnote_entries["E"]).to eq(Set.new(["Greer, Lowell. ", "Lubin, Steven. ", "Chase, Stephanie, ", "Brahms, Johannes, ", "Beethoven, Ludwig van, ", "Krufft, Nikolaus von, "]))
-      expect(endnote_entries["I"]).to eq(Set.new(["Harmonia Mundi USA, "]))
-      expect(endnote_entries["T"]).to eq(Set.new(["Music for horn "]))
+      #expect(endnote_entries["0"]).to eq(Set.new(["Generic"])) # I have no idea WHY this is correct, it is definitely not legal, but taking from earlier test for render_endnote in applicationhelper, the previous version of this.  jrochkind.
+      expect(endnote_entries["D"]).to eq(Set.new(["p2001."]))
+      expect(endnote_entries["C"]).to eq(Set.new(["[United States] :"]))
+      expect(endnote_entries["E"]).to eq(Set.new(["Greer, Lowell.", "Lubin, Steven.", "Chase, Stephanie,", "Brahms, Johannes,", "Beethoven, Ludwig van,", "Krufft, Nikolaus von,"]))
+      expect(endnote_entries["I"]).to eq(Set.new(["Harmonia Mundi USA,"]))
+      expect(endnote_entries["T"]).to eq(Set.new(["Music for horn"]))
 
       #nothing extra
-      expect(Set.new(endnote_entries.keys)).to eq(Set.new(["0", "C", "D", "E", "I", "T"]))      
+      expect(Set.new(endnote_entries.keys)).to eq(Set.new(["C", "D", "E", "I", "T"]))
     end
   end
 
