@@ -158,7 +158,8 @@ module Blacklight::Solr::Document::MarcExport
     # convert marc data to object hash
     marc_object = to_object
     
-    text = ''
+    # This is a legacy of the old export_as_endnote left for compatibility
+    text = "%0 Generic\n"
 
     # For each value in our end_note_format hash, iterate through
     # all marc_object fields and put them into string
