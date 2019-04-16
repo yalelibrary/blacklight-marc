@@ -33,6 +33,7 @@ module Blacklight::Marc
           # Catalog stuff.
           get 'catalog/:id/librarian_view', :to => "catalog#librarian_view", :as => "librarian_view_solr_document"
           get "catalog/endnote", :as => "endnote_solr_document"
+	  get "catalog/refworks", :as => "refworks_solr_document"
           
         end
       end
