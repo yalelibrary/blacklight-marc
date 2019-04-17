@@ -16,10 +16,7 @@ module BlacklightMarcHelper
     solr_document_path(opts.merge(format: 'endnote'))
   end
 
-# For exporting a single refworks  document. (refworks_catalog_path is defined by blacklight-marc and it is used for multiple document export)
-  def single_refworks_catalog_path opts = {}
-    solr_document_path(opts.merge(format: 'refworks_marc_txt'))
-  end
+
   # puts together a collection of documents into one refworks export string
   def render_refworks_texts(documents)
     val = ''
