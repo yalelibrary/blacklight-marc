@@ -146,13 +146,15 @@ module Blacklight::Solr::Document::MarcExport
       "%D" => "pub_date",
       "%E" => "add_entry",
       "%I" => "publisher",
-      "%J" => "series",
       "%@" => "isbn",
       "%_@" => "issn",
+      "%S" => "series",
       "%T" => "title",
       "%P" => "num_pages",
       "%U" => "url",
-      "%7" => "edition"
+      "%7" => "edition",
+      # nowhere to put scale, so use notes in %Z
+      "%Z" => "scale",
     }
     
     # convert marc data to object hash
