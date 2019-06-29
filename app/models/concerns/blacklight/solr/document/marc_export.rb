@@ -16,6 +16,7 @@ module Blacklight::Solr::Document::MarcExport
     document.will_export_as(:openurl_ctx_kev, "application/x-openurl-ctx-kev")
     document.will_export_as(:refworks_marc_txt, "text/plain")
     document.will_export_as(:endnote, "application/x-endnote-refer")
+    document.will_export_as(:ris, "application/ris")
   end
 
 
@@ -141,51 +142,76 @@ module Blacklight::Solr::Document::MarcExport
   # purpose. 
   def export_as_endnote()
     end_note_format = {
-      "%A" => "100.a",
-      "%C" => "260.a",
-      "%D" => "260.c",
-      "%E" => "700.a",
-      "%I" => "260.b",
-      "%J" => "440.a",
-      "%@" => "020.a",
-      "%_@" => "022.a",
-      "%T" => "245.a,245.b",
-      "%U" => "856.u",
-      "%7" => "250.a"
+      "%A" => "author",
+      "%C" => "pub_place",
+      "%D" => "pub_date",
+      "%E" => "add_entry",
+      "%I" => "publisher",
+      "%@" => "isbn",
+      "%_@" => "issn",
+      "%S" => "series",
+      "%T" => "title",
+      "%P" => "num_pages",
+      "%U" => "url",
+      "%7" => "edition",
+      # nowhere to put scale, so use notes in %Z
+      "%Z" => "scale",
     }
-    marc_obj = to_marc
-    # TODO. This should be rewritten to guess
-    # from actual Marc instead, probably.
-    format_str = 'Generic'
     
-    text = ''
-    text << "%0 #{ format_str }\n"
-    # If there is some reliable way of getting the language of a record we can add it here
-    #text << "%G #{record['language'].first}\n"
-    end_note_format.each do |key,value|
-      values = value.split(",")
-      first_value = values[0].split('.')
-      if values.length > 1
-        second_value = values[1].split('.')
-      else
-        second_value = []
-      end
-      
-      if marc_obj[first_value[0].to_s]
-        marc_obj.find_all{|f| (first_value[0].to_s) === f.tag}.each do |field|
-          if field[first_value[1]].to_s or field[second_value[1]].to_s
-            text << "#{key.gsub('_','')}"
-            if field[first_value[1]].to_s
-              text << " #{field[first_value[1]].to_s}"
-            end
-            if field[second_value[1]].to_s
-              text << " #{field[second_value[1]].to_s}"
-            end
-            text << "\n"
-          end
-        end
+    # convert marc data to object hash
+    doc_object = to_object
+    
+    # This is a legacy of the old export_as_endnote left for compatibility
+    text = "%0 Generic\n"
+
+    # For each value in our end_note_format hash, iterate through
+    # all marc_object fields and put them into string
+    # Each marc_object could have 0 or more strings in array
+    
+    end_note_format.each do |endnote_key,doc_key|
+      doc_object[doc_key].each do |doc_value|
+        text << "#{endnote_key} #{doc_value}\n"
       end
     end
+    text
+  end
+
+  def to_ris_text
+    ris_format = {
+      "AU" => "author",
+      "CY" => "pub_place",
+      "PY" => "pub_date",
+      "TA" => "add_entry",
+      "PB" => "publisher",
+      # could be either, not sure if will cause problems
+      "SN" => "isbn",
+      "SN" => "issn",
+      "M1" => "series",
+      "T1" => "title",
+      "EP" => "num_pages",
+      "UR" => "url",
+      "ET" => "edition",
+      # nowhere to put scale, so use notes in %Z
+      "N1" => "scale",
+    }
+    
+    # convert marc data to object hash
+    doc_object = to_object
+    
+    # Not sure how to find content type, just use generic
+    text = "TY  - GEN\n"
+
+    # For each value in our ris_format hash, iterate through
+    # all doc_object fields and put them into string
+    # Each doc_object could have 0 or more strings in array
+    
+    ris_format.each do |ris_key,obj_key|
+      doc_object[obj_key].each do |obj_value|
+        text << "#{ris_key}  - #{obj_value}\n"
+      end
+    end
+    # have to end RIS
+    text << "ER  -\n"
     text
   end
 
@@ -563,5 +589,68 @@ module Blacklight::Solr::Document::MarcExport
     temp_name = name.split(", ")
     return temp_name.last + " " + temp_name.first
   end 
+
+  # This method will turn our marc records into a Hash of arrays
+  # Where each key will give 0 or more results
+  # Ex: doc['isbn'] will be [] if no results are found
+  # Ex: doc['isbn'] could be ['1234', '5678'] of several records found
+  
+  def to_object
+    doc = {}
+
+    doc['isbn']       =   record_to_array('020.a')
+    doc['issn']       =   record_to_array('022.b')
+    doc['author']     =   record_to_array('100.a')
+    doc['edition']    =   record_to_array('250.a')
+    doc['scale']      =   record_to_array('255.a')
+    doc['num_pages']  =   record_to_array('300.a')
+    doc['cite_as']   =    record_to_array('524.a')
+    doc['add_entry'] =    record_to_array('700.a')
+    doc['url']       =    record_to_array('856.u')
+   
+    # Publisher, title, series could have multiple fields
+    # So just join the arrays together
+    
+    doc['pub_place'] =    record_to_array('260.a') +
+                          record_to_array('264.a')
+    doc['publisher']  =   record_to_array('260.b') +
+                          record_to_array('264.b')
+    doc['pub_date']   =   record_to_array('260.c') +
+                          record_to_array('264.c')
+    doc['title']      =   record_to_array('245.a') +
+                          record_to_array('245.b')
+    doc['series']     =   record_to_array('440.a') +
+                          record_to_array('490.a')
+
+    doc
+  end
+
+  # This takes an individual MARC field and turns it into 
+  # 0 or more members of an array for to_object
+
+  def record_to_array(marc_field)
+    record_values = []
+    marc_field, sub_field = marc_field.split('.')
+    to_marc.find_all{|f| marc_field == f.tag}.each do |entry|
+      unless entry[sub_field].nil? 
+        record_values.push(entry[sub_field])
+        # or clean the record first
+        # record_values.push(clean_record(entry[sub_field])
+      end
+    end
+    record_values
+  end
+
+  # Utility function to clean up trailing data inside record_to_array
+  # Before exporting it to a citation document
+
+  def clean_record(record_text)
+    record_text.chomp!(',')
+    record_text.chomp!(':')
+    record_text.chomp!('/')
+    record_text.chomp!(';')
+    record_text
+  end
+ 
   
 end
