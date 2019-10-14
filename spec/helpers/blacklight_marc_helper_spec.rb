@@ -43,4 +43,22 @@ describe BlacklightMarcHelper do
     end
   end
 
+  describe "#refworks_export_url" do
+    it "should use https" do
+      expect(helper.refworks_export_url(:vendor=>"test", :filter => 'filter_test', :url => 'http://library.yale.edu')).to \
+        match /^https:\/\//
+    end
+    it "should return correct url" do
+      expect(helper.refworks_export_url(:vendor=>"test", :filter => 'filter_test', :url => 'http://library.yale.edu')).to \
+        eq 'https://www.refworks.com/express/expressimport.asp?vendor=test&filter=filter_test&encoding=65001&url=http%3A%2F%2Flibrary.yale.edu'
+      expect(helper.refworks_export_url(:vendor=>"test vendor space", :filter => 'filter_test;filter2', :url => 'https://library.yale.edu')).to \
+        eq 'https://www.refworks.com/express/expressimport.asp?vendor=test+vendor+space&filter=filter_test%3Bfilter2&encoding=65001&url=https%3A%2F%2Flibrary.yale.edu'
+    end
+    it 'should use application_name when no vendor is provided' do
+      allow(helper).to receive_messages(application_name: 'AppName')
+      expect(helper.refworks_export_url(:filter => 'filter_test;filter2', :url => 'https://library.yale.edu')).to \
+        eq 'https://www.refworks.com/express/expressimport.asp?vendor=AppName&filter=filter_test%3Bfilter2&encoding=65001&url=https%3A%2F%2Flibrary.yale.edu'
+    end
+  end
+
 end
