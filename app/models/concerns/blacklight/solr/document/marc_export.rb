@@ -184,7 +184,6 @@ module Blacklight::Solr::Document::MarcExport
       "TA" => "add_entry",
       "PB" => "publisher",
       # could be either, not sure if will cause problems
-      "SN" => "isbn",
       "SN" => "issn",
       "M1" => "series",
       "T1" => "title",
