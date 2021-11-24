@@ -125,7 +125,7 @@ module Blacklight::Solr::Document::MarcExport
     # As of 11 May 2010, Refworks has a problem with UTF-8 if it's decomposed,
     # it seems to want C form normalization, although RefWorks support
     # couldn't tell me that. -jrochkind
-    text = ActiveSupport::Multibyte::Unicode.normalize(text, :c)
+    text = text.unicode_normalize :nfc
     
     return text
   end 
@@ -157,17 +157,17 @@ module Blacklight::Solr::Document::MarcExport
       # nowhere to put scale, so use notes in %Z
       "%Z" => "scale",
     }
-    
+
     # convert marc data to object hash
     doc_object = to_object
-    
+
     # This is a legacy of the old export_as_endnote left for compatibility
     text = "%0 Generic\n"
 
     # For each value in our end_note_format hash, iterate through
     # all marc_object fields and put them into string
     # Each marc_object could have 0 or more strings in array
-    
+
     end_note_format.each do |endnote_key,doc_key|
       doc_object[doc_key].each do |doc_value|
         text << "#{endnote_key} #{doc_value}\n"
