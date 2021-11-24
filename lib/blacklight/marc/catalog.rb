@@ -17,6 +17,13 @@ module Blacklight::Marc
       end
     end
 
+    def endnote
+      @response, _ = search_service.fetch(Array(params[:id]))
+      @document = @response.documents
+      respond_to do |format|
+        format.endnote { render :layout => false }
+      end
+    end
 
     #grabs a bunch of reworks documents
    def refworks
