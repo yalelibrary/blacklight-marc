@@ -22,6 +22,9 @@ module Blacklight::Marc
       Mime::Type.register "application/marcxml+xml", :marcxml,
       ["application/x-marc+xml", "application/x-marcxml+xml",
        "application/marc+xml"]
+      Mime::Type.register_alias "text/html", :refworks_archives
+      Mime::Type.register_alias "application/x-endnote-refer", :endnote_archives
+      Mime::Type.register_alias "application/ris", :ris_archives
      end
   end
 end

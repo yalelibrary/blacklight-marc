@@ -17,6 +17,9 @@ module Blacklight::Solr::Document::MarcExport
     document.will_export_as(:refworks_marc_txt, "text/plain")
     document.will_export_as(:endnote, "application/x-endnote-refer")
     document.will_export_as(:ris, "application/ris")
+    document.will_export_as(:refworks_archives, "text/plain")
+    document.will_export_as(:ris_archives, "application/ris")
+    document.will_export_as(:endnote_archives, "application/endnote")
   end
 
 
@@ -28,7 +31,10 @@ module Blacklight::Solr::Document::MarcExport
     to_marc.to_xml.to_s
   end
   alias_method :export_as_xml, :export_as_marcxml
-  
+
+  def export_as_archives
+    archives_doc
+  end
   
   # TODO This exporting as formatted citation thing should be re-thought
   # redesigned at some point to be more general purpose, but this
@@ -213,6 +219,41 @@ module Blacklight::Solr::Document::MarcExport
     text << "ER  -\n"
     text
   end
+
+  def export_as_refworks_archives
+    archives_refworks_format = {
+        "RT" => "format",
+        "A1" => "author",
+        # could be either, not sure if will cause problems
+        "JF" => "find_in",
+        "VO" => "volume", #Volume container
+        "T1" => "title",
+        "UL" => "url",
+        "RD" => "retrieved_day"
+    }
+    aspace_object = to_aspace
+    text ="\n"
+    archives_refworks_format.each do |refworks_key,aspace_key|
+        aspace_object[aspace_key].each do |aspace_val|
+            text << "#{refworks_key}  #{aspace_val}\n"
+        end
+    end
+    text << "\n"
+    text
+  end
+
+def to_aspace
+    doc = {}
+    doc['format'] = "Archives or Manuscripts"
+    doc['author'] = export_as_archives['author_display'].to_s
+    doc['find_in'] = export_as_archives['found_in_labels_ss'].to_s
+    doc['volume'] = export_as_archives['container_display'].to_s
+    doc['title'] = export_as_archives['title'].to_s
+    doc['url'] = "https://archives.yale.edu/#{export_as_archives['archive_space_uri_ss'].to_s}"
+    doc['retrieved_day'] = Date.today
+    doc
+end
+
 
   protected
   

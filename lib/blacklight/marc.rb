@@ -7,6 +7,7 @@ module Blacklight
 
     autoload :Routes, 'blacklight/marc/routes'
     autoload :Catalog, 'blacklight/marc/catalog'
+    autoload :Archives, 'blacklight/marc/archives'
     autoload :Indexer, 'blacklight/marc/indexer'
 
     def self.add_routes(router, options = {})
