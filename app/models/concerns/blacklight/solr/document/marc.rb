@@ -34,6 +34,12 @@ module Blacklight::Solr::Document::Marc
     @_ruby_marc_obj ||= load_marc
   end
 
+  def archives_doc
+    if is_archives
+      return docs_archives_value
+    end
+  end
+
 
   protected
   def marc_source
@@ -73,6 +79,12 @@ module Blacklight::Solr::Document::Marc
   def _marc_format_type
         #TODO: Raise if not present
     self.class.extension_parameters[:marc_format_type]    
+  end
+
+  def _docs_archives_value
+    if Solr::Document.extension_parameters[:id].include?("repositories")
+      self.class.extension_parameters[:docs]  #Solr::Document.extension_parameters[:docs]
+    end
   end
   
 end
