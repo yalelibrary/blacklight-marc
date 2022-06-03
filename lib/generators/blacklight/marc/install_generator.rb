@@ -60,6 +60,9 @@ EOF
     inject_into_file "app/controllers/catalog_controller.rb", after:"include Blacklight::Catalog" do
       "\n  include Blacklight::Marc::Catalog\n"
     end
+    inject_into_file "app/controllers/catalog_archives.rb", after:"include Blacklight::Archives" do
+        "\n  include Blacklight::Marc::Archives\n"
+    end
   end
 
 

@@ -4,6 +4,7 @@ en:
       librarian_view: 'Librarian View'
       endnote: 'Export to EndNote'
       refworks: 'Export to Refworks'
+      archives: 'Export to Archives'
 
 
     search:
