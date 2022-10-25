@@ -25,6 +25,13 @@ module Blacklight::Marc
       Mime::Type.register_alias "text/html", :refworks_archives
       Mime::Type.register_alias "application/x-endnote-refer", :endnote_archives
       Mime::Type.register_alias "application/ris", :ris_archives
+
+      # these are here for backwards compatibility with the old class names,
+      # which zeitwerk didn't care for
+      config.after_initialize do
+        Blacklight::Solr::Document::Marc = Blacklight::Marc::DocumentExtension
+        Blacklight::Solr::Document::MarcExport = Blacklight::Marc::DocumentExport
+      end
      end
   end
 end
