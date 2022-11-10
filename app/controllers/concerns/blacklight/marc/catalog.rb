@@ -12,29 +12,27 @@ module Blacklight::Marc
     end
 
     def librarian_view
-      @response, @document = fetch params[:id]
-
-      respond_to do |format|
-        format.html
-        format.js { render :layout => false }
-      end
+        if Blacklight::VERSION >= '8'
+            @document = search_service.fetch(params[:id])
+            @response = ActiveSupport::Deprecation::DeprecatedObjectProxy.new(@document.response, "The @response instance variable is deprecated and will be removed in Blacklight-marc 8.0")
+            @response, @document = fetch params[:id]
+        else
+            deprecated_response, @document = search_service.fetch(params[:id])
+            @response = ActiveSupport::Deprecation::DeprecatedObjectProxy.new(deprecated_response, "The @response instance variable is deprecated and will be removed in Blacklight-marc 8.0")
+        end
+        respond_to do |format|
+            format.html
+            format.js {render :layout => false}
+        end
     end
 
     def endnote
       @response, _ = search_service.fetch(Array(params[:id]))
       @document = @response.documents
-      respond_to do |format|
-        format.endnote { render :layout => false }
-      end
+     respond_to do |format|
+       format.endnote { render :layout => false }
+     end
     end
-
-    #grabs a bunch of reworks documents
-   def refworks
-      @response, @documents = search_service.fetch(Array(params[:id]))
-      respond_to do |format|
-        format.refworks_marc_txt { render :layout => false }
-      end
-   end
 
    def archives
        @response, @documents = search_service.fetch(Array(params[:id]))

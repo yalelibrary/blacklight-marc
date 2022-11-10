@@ -5,7 +5,7 @@
 # include this module in any document extension (or any other class)
 # that provides a #to_marc returning a ruby-marc object.  This module will add
 # in export_as translation methods for a variety of formats. 
-module Blacklight::Solr::Document::MarcExport
+module Blacklight::Marc::DocumentExport
   
   def self.register_export_formats(document)
     document.will_export_as(:xml)
@@ -16,6 +16,7 @@ module Blacklight::Solr::Document::MarcExport
     document.will_export_as(:openurl_ctx_kev, "application/x-openurl-ctx-kev")
     document.will_export_as(:refworks_marc_txt, "text/plain")
     document.will_export_as(:endnote, "application/x-endnote-refer")
+    #document.will_export_as(:endnote, "application/endnote")
     document.will_export_as(:ris, "application/ris")
     document.will_export_as(:refworks_archives, "text/plain")
     document.will_export_as(:ris_archives, "application/ris")
@@ -131,7 +132,7 @@ module Blacklight::Solr::Document::MarcExport
     # As of 11 May 2010, Refworks has a problem with UTF-8 if it's decomposed,
     # it seems to want C form normalization, although RefWorks support
     # couldn't tell me that. -jrochkind
-    text = text.unicode_normalize :nfc
+    text = text.unicode_normalize(:nfc)
     
     return text
   end 
@@ -146,7 +147,7 @@ module Blacklight::Solr::Document::MarcExport
   # rest of the data is barely correct but messy. TODO, a new version of this,
   # or better yet just an export_as_ris instead, which will be more general
   # purpose. 
-  def export_as_endnote()
+  def export_as_endnote
     end_note_format = {
       "%A" => "author",
       "%C" => "pub_place",
@@ -414,6 +415,10 @@ end
       text += "<i>" + mla_citation_title(title) + "</i> "
     end
 
+    # Edition
+    edition_data = setup_edition(record)
+    text += edition_data + " " unless edition_data.nil?
+    
     # Publication
     text += setup_pub_info(record) + ", " unless setup_pub_info(record).nil?
     
@@ -457,10 +462,11 @@ end
     
     # setup title info
     title = setup_title_info(record)
-    if !title.nil?
-      text += "<i>" + mla_citation_title(title) + "</i> "
-    end
+    text += "<i>" + title + "</i> " unless title.nil?
     
+    # Edition
+    edition_data = setup_edition(record)
+    text += edition_data + " " unless edition_data.nil?
     
     # Publisher info
     text += setup_pub_info(record) unless setup_pub_info(record).nil?
