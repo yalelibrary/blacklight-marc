@@ -415,6 +415,10 @@ end
       text += "<i>" + mla_citation_title(title) + "</i> "
     end
 
+    # Edition
+    edition_data = setup_edition(record)
+    text += edition_data + " " unless edition_data.nil?
+    
     # Publication
     text += setup_pub_info(record) + ", " unless setup_pub_info(record).nil?
     
@@ -458,10 +462,11 @@ end
     
     # setup title info
     title = setup_title_info(record)
-    if !title.nil?
-      text += "<i>" + mla_citation_title(title) + "</i> "
-    end
+    text += "<i>" + title + "</i> " unless title.nil?
     
+    # Edition
+    edition_data = setup_edition(record)
+    text += edition_data + " " unless edition_data.nil?
     
     # Publisher info
     text += setup_pub_info(record) unless setup_pub_info(record).nil?
