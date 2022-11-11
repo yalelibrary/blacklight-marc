@@ -26,14 +26,6 @@ module Blacklight::Marc
         end
     end
 
-    def endnote
-      @response, _ = search_service.fetch(Array(params[:id]))
-      @document = @response.documents
-     respond_to do |format|
-       format.endnote { render :layout => false }
-     end
-    end
-
    def archives
        @response, @documents = search_service.fetch(Array(params[:id]))
        respond_to do |format|
