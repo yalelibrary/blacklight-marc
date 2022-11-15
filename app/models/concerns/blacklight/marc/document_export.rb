@@ -477,9 +477,18 @@ end
     end
     text
   end
+
   def setup_pub_date(record)
-    if !record.find{|f| f.tag == '260'}.nil?
-      pub_date = record.find{|f| f.tag == '260'}
+    text = pub_date_26x(record,"264").present? ? pub_date_26x(record,"264") : (pub_date_26x(record,"260").present? ? pub_date_26x(record,"260") : "")
+  end
+
+  def setup_pub_info(record)
+    text = pub_info_26x(record,"264").present? ? pub_info_26x(record,"264") : (pub_info_26x(record,"260").present? ? pub_info_26x(record,"260") : "")
+  end
+
+  def pub_date_26x(record, field_26x)
+    if !record.find{|f| f.tag == field_26x }.nil?
+      pub_date = record.find{|f| f.tag == field_26x}
       if pub_date.find{|s| s.code == 'c'}
         date_value = pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4] unless pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4].blank?
       end
@@ -487,9 +496,10 @@ end
     end
     clean_end_punctuation(date_value) if date_value
   end
-  def setup_pub_info(record)
+
+  def pub_info_26x(record, field_26x)
     text = ''
-    pub_info_field = record.find{|f| f.tag == '260'}
+    pub_info_field = record.find{|f| f.tag == field_26x}
     if !pub_info_field.nil?
       a_pub_info = pub_info_field.find{|s| s.code == 'a'}
       b_pub_info = pub_info_field.find{|s| s.code == 'b'}
@@ -503,6 +513,7 @@ end
     end
     return nil if text.strip.blank?
     clean_end_punctuation(text.strip)
+
   end
 
   def mla_citation_title(text)
