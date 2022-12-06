@@ -40,8 +40,10 @@ EOF
       # The following shows how to setup this blacklight document to display marc documents
   extension_parameters[:marc_source_field] = :marc_display
   extension_parameters[:marc_format_type] = :marcxml
-  use_extension( Blacklight::Solr::Document::Marc) do |document|
-    document.key?( :marc_display  )
+  #use_extension( Blacklight::Solr::Document::Marc) do |document|
+  use_extension(Blacklight::Marc::DocumentExtension) do |document|
+    document.key?(SolrDocument.extension_parameters[:marc_source_field]) 
+    #document.key?( :marc_display  )
   end
   
   field_semantics.merge!(    
@@ -66,9 +68,19 @@ EOF
   end
 
 
-  def inject_blacklight_marc_routes
-    route('Blacklight::Marc.add_routes(self)')
-  end
+  #def inject_blacklight_marc_routes
+  #  route('Blacklight::Marc.add_routes(self)')
+ # end 
+    def inject_blacklight_marc_routes  
+        route <<-EOF
+        concern :marc_viewable, Blacklight::Marc::Routes::MarcViewable.new
+        EOF
+
+        inject_into_file "config/routes.rb", after: "resources :solr_documents, only: [:show], path: '/catalog', controller: 'catalog' do" do
+            "\n    concerns [:exportable, :marc_viewable]\nINJECT_FLAG"
+        end
+        gsub_file "config/routes.rb", /[\n]INJECT_FLAG\s+concerns \:exportable/,""
+    end
 
   end
 end
