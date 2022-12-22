@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{MARC support for Blacklight}
   spec.summary       = %q{MARC support for Blacklight}
   spec.homepage      = "https://github.com/projectblacklight/blacklight-marc"
-  spec.license       = "Apache 2.0"
+  spec.license       = "Apache-2.0"
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
@@ -18,22 +18,19 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'blacklight', '> 6.1', '< 8.a'
+  spec.add_dependency 'blacklight', '>= 7.11', '< 9'
   spec.add_dependency "library_stdnums"
   spec.add_dependency "rails"
-  # Let's allow future versions of marc, count on
-  # them to be backwards compat until 1.1
-  spec.add_dependency "marc",      ">= 0.4.3", "< 1.1"  # Marc record parser.
-  spec.add_dependency "traject", "~>2.1"
+  spec.add_dependency "marc",      ">= 0.4.3", "< 2.0"  # Marc record parser.
+  spec.add_dependency "traject", "~>3.0"
   spec.add_dependency 'marc-fastxmlwriter' # NO REXML
 
-  spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
-  spec.add_development_dependency "rspec-rails", '~> 3.0'
+  spec.add_development_dependency "rspec-rails", '~> 4.0'
   spec.add_development_dependency "rspec-activemodel-mocks"
   spec.add_development_dependency "solr_wrapper"
   spec.add_development_dependency "capybara"
-  spec.add_development_dependency "coveralls"
   spec.add_development_dependency "simplecov"
-  spec.add_development_dependency "engine_cart", "~> 1.0"
+  spec.add_development_dependency "engine_cart", "~> 2.0"
 end
