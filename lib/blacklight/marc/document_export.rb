@@ -479,9 +479,6 @@ end
   end
 
 
-
-
-
   def setup_pub_date(record)
     text = pub_date_26x(record,"264").present? ? pub_date_26x(record,"264") : (pub_date_26x(record,"260").present? ? pub_date_26x(record,"260") : "")
   end
