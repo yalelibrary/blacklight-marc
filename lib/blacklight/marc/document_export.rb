@@ -360,7 +360,7 @@ end
 
   # Main method for defining chicago style citation.  If we don't end up converting to using a citation formatting service
   # we should make this receive a semantic document and not MARC so we can use this with other formats.
-  def chicago_citation1(record)
+  def chicago_citation(record)
     #   more than 10, only the first seven should be listed in the bibliography, followed by et al.
     ## less than four, list all, first author: last name, first name, others first name last name
     #  and before the last author ##
@@ -454,27 +454,21 @@ end
     edition = ""
     edition << setup_edition(record) unless setup_edition(record).nil?
 
-    pub_info = ""
-    if marc["260"] and (marc["260"]["a"] or marc["260"]["b"])
-      pub_info << clean_end_punctuation(marc["260"]["a"]).strip if marc["260"]["a"]
-      pub_info << ": #{clean_end_punctuation(marc["260"]["b"]).strip}" if marc["260"]["b"]
-      pub_info << ", #{setup_pub_date(marc)}" if marc["260"]["c"]
-    elsif marc["502"] and marc["502"]["a"] # MARC 502 is the Dissertation Note.  This holds the correct pub info for these types of records.
-      pub_info << marc["502"]["a"]
-    elsif marc["502"] and (marc["502"]["b"] or marc["502"]["c"] or marc["502"]["d"]) #sometimes the dissertation note is encoded in pieces in the $b $c and $d sub fields instead of lumped into the $a
-      pub_info << "#{marc["502"]["b"]}, #{marc["502"]["c"]}, #{clean_end_punctuation(marc["502"]["d"])}"
-    end
+    pub_info = setup_pub_info(record) unless setup_pub_info(record).nil?
+
 
     citation = ""
     citation << "#{author_text} " unless author_text.blank?
     #add publication date
     citation << "#{pub_date} " unless pub_date.blank?
-    citation << "<i>#{title}.</i> " unless title.blank?
-
-    citation << "#{section_title} " unless section_title.blank?
-    citation << "#{additional_title} " unless additional_title.blank?
+    citation << "<i>#{title}</i> " unless title.blank?
     citation << "#{edition} " unless edition.blank?
     citation << "#{pub_info}." unless pub_info.blank?
+    unless citation.blank?
+      if citation[-1,1] != "."
+        citation += "."
+      end
+    end
     citation
   end
 
