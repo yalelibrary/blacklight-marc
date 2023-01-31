@@ -360,6 +360,7 @@ end
 
   # Main method for defining chicago style citation.  If we don't end up converting to using a citation formatting service
   # we should make this receive a semantic document and not MARC so we can use this with other formats.
+  #  Notes and Bibliography
   def chicago_citation(record)
     #   more than 10, only the first seven should be listed in the bibliography, followed by et al.
     ## less than four, list all, first author: last name, first name, others first name last name
@@ -393,13 +394,13 @@ end
               author_text << ", "
             end
           elsif index + 1 == authors[:primary_authors].length
-            author_text << "and #{name_reverse(author)}."
+            author_text << "and #{name_reverse(author).gsub(/\,.$/, '')}"
           else
             author_text << "#{name_reverse(author)}, "
           end
         end
       else
-        author_text << authors[:primary_authors].first
+        author_text << authors[:primary_authors].first.gsub(/\,.$/, '')
       end
     else
       temp_authors = []
@@ -439,7 +440,9 @@ end
 
     # Get Pub Date
     pub_date = ""
-    pub_date = setup_pub_date(record) + ". " unless setup_pub_date(record).nil?
+    pub_date = setup_pub_date(record)  unless setup_pub_date(record).nil?
+
+    # Get volumes
 
     # setup title info
     title = setup_title_info(record)
@@ -458,12 +461,24 @@ end
 
 
     citation = ""
-    citation << "#{author_text} " unless author_text.blank?
-    #add publication date
-    citation << "#{pub_date} " unless pub_date.blank?
+    citation << "#{author_text}. " unless author_text.blank?
+
     citation << "<i>#{title}</i> " unless title.blank?
     citation << "#{edition} " unless edition.blank?
-    citation << "#{pub_info}." unless pub_info.blank?
+
+    # add volumes information if not null
+    volumes = volumes_info(record) unless volumes_info(record).blank?
+    volumes = volumes.gsub("volumes", "vols. ")
+    citation << volumes unless volumes.blank?
+
+    citation << "#{pub_info}" unless pub_info.blank?
+    if (pub_date.blank? && !pub_info.blank?)
+        citation << "."
+    elsif (!pub_date.blank? && !pub_info.blank?)
+        citation << ", #{pub_date}."
+    elsif !pub_date.blank?  && pub_info.blank?
+        citation << "#{pub_date}."
+    end
     unless citation.blank?
       if citation[-1,1] != "."
         citation += "."
@@ -509,6 +524,15 @@ end
     return nil if text.strip.blank?
     clean_end_punctuation(text.strip)
 
+  end
+
+  def volumes_info(record)
+    volumes_info_field = record.find{|f| f.tag == '300'}
+    if !volumes_info_field.nil?
+      volume_info = volumes_info_field.find{|s| s.code == 'a'}
+      volumes = volume_info.value.match(/(\d\svolumes)/) unless volume_info.value.match(/(\d\svolumes)/).blank?
+      volumes = clean_end_punctuation(volumes.to_s.strip) unless volumes.nil?
+    end
   end
 
   def mla_citation_title(text)
