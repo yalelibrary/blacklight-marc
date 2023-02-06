@@ -466,6 +466,8 @@ end
     citation << "<i>#{title}</i> " unless title.blank?
     citation << "#{edition} " unless edition.blank?
 
+    puts "-------------  chicago cite ========  #{citation} --------------"
+
     # add volumes information if not null
     volumes = volumes_info(record) unless volumes_info(record).blank?
     volumes = volumes.gsub("volumes", "vols. ")
@@ -485,6 +487,7 @@ end
       end
     end
     citation
+    puts " ==========  chicago citation #{citation} =============="
   end
 
 
@@ -500,12 +503,40 @@ end
     if !record.find{|f| f.tag == field_26x }.nil?
       pub_date = record.find{|f| f.tag == field_26x}
       if pub_date.find{|s| s.code == 'c'}
-        date_value = pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4] unless pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4].blank?
-      end
+        c_value = pub_date.find{|s| s.code == 'c'}.value unless pub_date.find{|s| s.code == 'c'}.value.blank?
+        date_value_twoOrThree = c_value.match(/([\d]{2,3}[\-?u|\s])/) unless c_value.match(/([\d]{2,3}[\-?u|\s])/).blank?
+
+        date_value_fourDigitRange = c_value.match(/([\d]{4}[\-][\d]{2}$)/) unless c_value.match(/([\d]{4}[\-][\d]{2}$)/).blank?
+        date_value_fourDigitDash = c_value.match(/([\d]{4}[\-]$)/) unless c_value.match(/([\d]{4}[\-]$)/).blank?
+        date_value_betweenFourDigits = c_value.match(/(between\s[\d]{4}\sand\s[\d]{4}$)/) unless c_value.match(/(between\s[\d]{4}\sand\s[\d]{4}$)/).blank?
+        if date_value_twoOrThree.present?
+          puts " ---------------  #2-3 #{date_value_twoOrThree[0]} is array #{date_value_twoOrThree}-----------"
+          date_value = date_value_twoOrThree[0].gsub(/\D/, '0') unless date_value_twoOrThree.nil?
+          date_value = "[" + date_value + "?]" unless date_value.nil?
+        elsif date_value_fourDigitRange.present? || date_value_fourDigitDash.present?
+          date_value = date_value
+        elsif date_value_betweenFourDigits.present?
+          dates = new Array
+          dates = date_value_betweenFourDigits.scan(/[\d]{4}/)
+          date1 = dates[0].to_s
+          date2 = date[1].to_s
+          date_value = "["+ date1 + "-" + date2 + "?]"
+        else
+          date_value = c_value.match(/[\d]{4}/) unless  c_value.match(/[\d]{4}/).blank?
+          puts "------------ c value #{c_value} ------ date_value #{date_value}"
+
+
+       # date_value = pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4] unless pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4].blank
+
+        end
       return nil if date_value.nil?
+        clean_end_punctuation(date_value.to_s) if date_value
+        puts "8888888888888888888  date #{date_value} ---------"
+      end
     end
-    clean_end_punctuation(date_value) if date_value
+    #clean_end_punctuation(date_value) if date_value
   end
+
 
   def pub_info_26x(record, field_26x)
     text = ''
