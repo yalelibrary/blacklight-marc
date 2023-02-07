@@ -51,6 +51,7 @@ module Blacklight::Marc::DocumentExport
   
   def export_as_chicago_citation_txt
     chicago_citation( to_marc )
+
   end
 
   # Exports as an OpenURL KEV (key-encoded value) query string.
@@ -438,6 +439,7 @@ end
       end
     end
 
+
     # Get Pub Date
     pub_date = ""
     pub_date = setup_pub_date(record)  unless setup_pub_date(record).nil?
@@ -461,15 +463,14 @@ end
 
 
     citation = ""
-    citation << "#{author_text}. " unless author_text.blank?
+    citation << "#{author_text} " unless author_text.blank?
 
     citation << "<i>#{title}</i> " unless title.blank?
     citation << "#{edition} " unless edition.blank?
-
     # add volumes information if not null
     volumes = volumes_info(record) unless volumes_info(record).blank?
-    volumes = volumes.gsub("volumes", "vols. ")
-    citation << volumes unless volumes.blank?
+    volumes = volumes.gsub("volumes", "vols. ") unless volumes.nil?
+    citation << "#{volumes} " unless volumes.blank?
 
     citation << "#{pub_info}" unless pub_info.blank?
     if (pub_date.blank? && !pub_info.blank?)
