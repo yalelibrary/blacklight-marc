@@ -609,7 +609,6 @@ module Blacklight::Marc::DocumentExport
             end
             text += b_title_info unless b_title_info.nil?
         end
-
         return nil if text.strip.blank?
         clean_end_punctuation(text.strip) + "."
 
