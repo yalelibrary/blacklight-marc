@@ -258,127 +258,7 @@ end
 
   protected
   
-  # Main method for defining chicago style citation.  If we don't end up converting to using a citation formatting service
-  # we should make this receive a semantic document and not MARC so we can use this with other formats.
-  def chicago_citation(marc)
-    authors = get_all_authors(marc)    
-    author_text = ""
-    unless authors[:primary_authors].blank?
-      if authors[:primary_authors].length > 10
-        authors[:primary_authors].each_with_index do |author,index|
-          if index < 7
-            if index == 0
-              author_text << "#{author}"
-              if author.ends_with?(",")
-                author_text << " "
-              else
-                author_text << ", "
-              end
-            else
-              author_text << "#{name_reverse(author)}, "
-            end
-          end
-        end
-        author_text << " et al."
-      elsif authors[:primary_authors].length > 1
-        authors[:primary_authors].each_with_index do |author,index|
-          if index == 0
-            author_text << "#{author}"
-            if author.ends_with?(",")
-              author_text << " "
-            else
-              author_text << ", "
-            end
-          elsif index + 1 == authors[:primary_authors].length
-            author_text << "and #{name_reverse(author)}."
-          else
-            author_text << "#{name_reverse(author)}, "
-          end 
-        end
-      else
-        author_text << authors[:primary_authors].first
-      end
-    else
-      temp_authors = []
-      authors[:translators].each do |translator|
-        temp_authors << [translator, "trans."]
-      end
-      authors[:editors].each do |editor|
-        temp_authors << [editor, "ed."]
-      end
-      authors[:compilers].each do |compiler|
-        temp_authors << [compiler, "comp."]
-      end
-      
-      unless temp_authors.blank?
-        if temp_authors.length > 10
-          temp_authors.each_with_index do |author,index|
-            if index < 7
-              author_text << "#{author.first} #{author.last} "
-            end
-          end
-          author_text << " et al."
-        elsif temp_authors.length > 1
-          temp_authors.each_with_index do |author,index|
-            if index == 0
-              author_text << "#{author.first} #{author.last}, "
-            elsif index + 1 == temp_authors.length
-              author_text << "and #{name_reverse(author.first)} #{author.last}"
-            else
-              author_text << "#{name_reverse(author.first)} #{author.last}, "
-            end
-          end
-        else
-          author_text << "#{temp_authors.first.first} #{temp_authors.first.last}"
-        end
-      end
-    end
-    title = ""
-    additional_title = ""
-    section_title = ""
-    if marc["245"] and (marc["245"]["a"] or marc["245"]["b"])
-      title << citation_title(clean_end_punctuation(marc["245"]["a"]).strip) if marc["245"]["a"]
-      title << ": #{citation_title(clean_end_punctuation(marc["245"]["b"]).strip)}" if marc["245"]["b"]
-    end
-    if marc["245"] and (marc["245"]["n"] or marc["245"]["p"])
-      section_title << citation_title(clean_end_punctuation(marc["245"]["n"])) if marc["245"]["n"]
-      if marc["245"]["p"]
-        section_title << ", <i>#{citation_title(clean_end_punctuation(marc["245"]["p"]))}.</i>"
-      elsif marc["245"]["n"]
-        section_title << "."
-      end
-    end
-    
-    if !authors[:primary_authors].blank? and (!authors[:translators].blank? or !authors[:editors].blank? or !authors[:compilers].blank?)
-        additional_title << "Translated by #{authors[:translators].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:translators].blank?
-        additional_title << "Edited by #{authors[:editors].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:editors].blank?
-        additional_title << "Compiled by #{authors[:compilers].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:compilers].blank?
-    end
-    
-    edition = ""
-    edition << setup_edition(marc) unless setup_edition(marc).nil?
-    
-    pub_info = ""
-    if marc["260"] and (marc["260"]["a"] or marc["260"]["b"]) 
-      pub_info << clean_end_punctuation(marc["260"]["a"]).strip if marc["260"]["a"]
-      pub_info << ": #{clean_end_punctuation(marc["260"]["b"]).strip}" if marc["260"]["b"]
-      pub_info << ", #{setup_pub_date(marc)}" if marc["260"]["c"]
-    elsif marc["502"] and marc["502"]["a"] # MARC 502 is the Dissertation Note.  This holds the correct pub info for these types of records.
-      pub_info << marc["502"]["a"]
-    elsif marc["502"] and (marc["502"]["b"] or marc["502"]["c"] or marc["502"]["d"]) #sometimes the dissertation note is encoded in pieces in the $b $c and $d sub fields instead of lumped into the $a
-      pub_info << "#{marc["502"]["b"]}, #{marc["502"]["c"]}, #{clean_end_punctuation(marc["502"]["d"])}"
-    end
-    
-    citation = ""
-    citation << "#{author_text} " unless author_text.blank?
-    citation << "<i>#{title}.</i> " unless title.blank?
-    citation << "#{section_title} " unless section_title.blank?
-    citation << "#{additional_title} " unless additional_title.blank?
-    citation << "#{edition} " unless edition.blank?
-    citation << "#{pub_info}." unless pub_info.blank?
-    citation
-  end
-  
+
   
   
   def mla_citation(record)
@@ -477,9 +357,133 @@ end
     end
     text
   end
+
+  # Main method for defining chicago style citation.  If we don't end up converting to using a citation formatting service
+  # we should make this receive a semantic document and not MARC so we can use this with other formats.
+  def chicago_citation(record)
+    #   more than 10, only the first seven should be listed in the bibliography, followed by et al.
+    ## less than four, list all, first author: last name, first name, others first name last name
+    #  and before the last author ##
+    authors = get_all_authors(record)
+    author_text = ""
+    unless authors[:primary_authors].blank?
+      if authors[:primary_authors].length > 10
+        authors[:primary_authors].each_with_index do |author,index|
+          if index < 7
+            if index == 0
+              author_text << "#{author}"
+              if author.ends_with?(",")
+                author_text << " "
+              else
+                author_text << ", "
+              end
+            else
+              author_text << "#{name_reverse(author)}, "
+            end
+          end
+        end
+        author_text << " et al."
+      elsif authors[:primary_authors].length > 1
+        authors[:primary_authors].each_with_index do |author,index|
+          if index == 0
+            author_text << "#{author}"
+            if author.ends_with?(",")
+              author_text << " "
+            else
+              author_text << ", "
+            end
+          elsif index + 1 == authors[:primary_authors].length
+            author_text << "and #{name_reverse(author)}."
+          else
+            author_text << "#{name_reverse(author)}, "
+          end
+        end
+      else
+        author_text << authors[:primary_authors].first
+      end
+    else
+      temp_authors = []
+      authors[:translators].each do |translator|
+        temp_authors << [translator, "trans."]
+      end
+      authors[:editors].each do |editor|
+        temp_authors << [editor, "ed."]
+      end
+      authors[:compilers].each do |compiler|
+        temp_authors << [compiler, "comp."]
+      end
+
+      unless temp_authors.blank?
+        if temp_authors.length > 10
+          temp_authors.each_with_index do |author,index|
+            if index < 7
+              author_text << "#{author.first} #{author.last} "
+            end
+          end
+          author_text << " et al."
+        elsif temp_authors.length > 1
+          temp_authors.each_with_index do |author,index|
+            if index == 0
+              author_text << "#{author.first} #{author.last}, "
+            elsif index + 1 == temp_authors.length
+              author_text << "and #{name_reverse(author.first)} #{author.last}"
+            else
+              author_text << "#{name_reverse(author.first)} #{author.last}, "
+            end
+          end
+        else
+          author_text << "#{temp_authors.first.first} #{temp_authors.first.last}"
+        end
+      end
+    end
+
+    # Get Pub Date
+    pub_date = ""
+    pub_date = setup_pub_date(record) + ". " unless setup_pub_date(record).nil?
+
+    # setup title info
+    title = setup_title_info(record)
+
+
+    if !authors[:primary_authors].blank? and (!authors[:translators].blank? or !authors[:editors].blank? or !authors[:compilers].blank?)
+      additional_title << "Translated by #{authors[:translators].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:translators].blank?
+      additional_title << "Edited by #{authors[:editors].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:editors].blank?
+      additional_title << "Compiled by #{authors[:compilers].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:compilers].blank?
+    end
+
+    edition = ""
+    edition << setup_edition(record) unless setup_edition(record).nil?
+
+    pub_info = setup_pub_info(record) unless setup_pub_info(record).nil?
+
+
+    citation = ""
+    citation << "#{author_text} " unless author_text.blank?
+    #add publication date
+    citation << "#{pub_date} " unless pub_date.blank?
+    citation << "<i>#{title}</i> " unless title.blank?
+    citation << "#{edition} " unless edition.blank?
+    citation << "#{pub_info}." unless pub_info.blank?
+    unless citation.blank?
+      if citation[-1,1] != "."
+        citation += "."
+      end
+    end
+    citation
+  end
+
+
   def setup_pub_date(record)
-    if !record.find{|f| f.tag == '260'}.nil?
-      pub_date = record.find{|f| f.tag == '260'}
+    text = pub_date_26x(record,"264").present? ? pub_date_26x(record,"264") : (pub_date_26x(record,"260").present? ? pub_date_26x(record,"260") : "")
+  end
+
+  def setup_pub_info(record)
+    text = pub_info_26x(record,"264").present? ? pub_info_26x(record,"264") : (pub_info_26x(record,"260").present? ? pub_info_26x(record,"260") : "")
+  end
+
+  def pub_date_26x(record, field_26x)
+    if !record.find{|f| f.tag == field_26x }.nil?
+      pub_date = record.find{|f| f.tag == field_26x}
       if pub_date.find{|s| s.code == 'c'}
         date_value = pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4] unless pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4].blank?
       end
@@ -487,9 +491,10 @@ end
     end
     clean_end_punctuation(date_value) if date_value
   end
-  def setup_pub_info(record)
+
+  def pub_info_26x(record, field_26x)
     text = ''
-    pub_info_field = record.find{|f| f.tag == '260'}
+    pub_info_field = record.find{|f| f.tag == field_26x}
     if !pub_info_field.nil?
       a_pub_info = pub_info_field.find{|s| s.code == 'a'}
       b_pub_info = pub_info_field.find{|s| s.code == 'b'}
@@ -503,6 +508,7 @@ end
     end
     return nil if text.strip.blank?
     clean_end_punctuation(text.strip)
+
   end
 
   def mla_citation_title(text)
