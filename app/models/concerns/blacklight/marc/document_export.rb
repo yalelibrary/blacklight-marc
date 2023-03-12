@@ -638,11 +638,11 @@ module Blacklight::Marc::DocumentExport
             b_title_info = title_info_field.find {|s| s.code == 'b'}
             a_title_info = clean_end_punctuation(a_title_info.value.strip) unless a_title_info.nil?
             b_title_info = clean_end_punctuation(b_title_info.value.strip) unless b_title_info.nil?
-            text += a_title_info unless a_title_info.nil?
+            text += a_title_info.strip unless a_title_info.nil?
             if !a_title_info.nil? and !b_title_info.nil?
                 text += ": "
             end
-            text += b_title_info unless b_title_info.nil?
+            text += b_title_info.strip unless b_title_info.nil?
         end
         series_title_field = record.find {|f| f.tag == '490'}
         if !series_title_field.nil?
