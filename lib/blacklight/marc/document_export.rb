@@ -259,6 +259,8 @@ module Blacklight::Marc::DocumentExport
     protected
 
 
+
+
     def mla_citation(record)
         text = ''
         authors_final = []
