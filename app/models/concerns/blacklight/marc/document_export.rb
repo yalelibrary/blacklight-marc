@@ -299,7 +299,8 @@ module Blacklight::Marc::DocumentExport
         text += edition_data + " " unless edition_data.nil?
 
         # Publication
-        text += setup_pub_info(record) unless setup_pub_info(record).nil?
+        text += setup_pub_info(record) unless setup_pub_info(record).nil? || !physical_description_sound(record).nil?
+        text += physical_description_sound(record) unless physical_description_sound(record).nil?
 
         # Get Pub Date
         text += + ", " + setup_pub_date(record) unless setup_pub_date(record).empty?
@@ -348,7 +349,8 @@ module Blacklight::Marc::DocumentExport
         text += edition_data + " " unless edition_data.nil?
 
         # Publisher info
-        text += setup_pub_info(record) unless setup_pub_info(record).nil?
+        text += setup_pub_info(record) unless setup_pub_info(record).nil? || !physical_description_sound(record).nil?
+        text += physical_description_sound(record) unless physical_description_sound(record).nil?
         unless text.blank?
             if text[-1, 1] != "."
                 text += "."
@@ -437,6 +439,14 @@ module Blacklight::Marc::DocumentExport
             end
         end
 
+        unless author_text.blank?
+            author_text = author_text.gsub(/\,$/, "")
+            if author_text[-1, 1] != "."
+                author_text += ". "
+            else
+                author_text += " "
+            end
+        end
         # Get Pub Date
         pub_date = setup_pub_date(record) unless setup_pub_date(record).nil?
 
@@ -459,25 +469,27 @@ module Blacklight::Marc::DocumentExport
 
 
         citation = ""
-        citation << "#{author_text} " unless author_text.blank?
+        citation << "#{author_text}" unless author_text.blank?
 
         citation << "<i>#{title}</i> " unless title.blank?
         citation << "#{edition} " unless edition.blank?
-
-        p
 
         # add volumes information if not null
         volumes = volumes_info(record) unless volumes_info(record).blank?
         volumes = volumes.gsub("volumes", "vols. ") unless volumes.nil?
         citation << volumes unless volumes.blank?
 
+        is_sound = is_sound_disc(record)
+        sound_info = physical_description_sound(record)
 
-        citation << "#{pub_info}" unless pub_info.blank?
-        if (pub_date.blank? && !pub_info.blank?)
+
+        citation << "#{pub_info}" unless pub_info.blank? || is_sound
+        citation << "#{sound_info}" unless sound_info.nil?
+        if pub_date.blank? && (!pub_info.blank? || !sound_info.nil?)
             citation << "."
-        elsif (!pub_date.blank? && !pub_info.blank?)
+        elsif !pub_date.blank? && (!pub_info.blank? || !sound_info.nil?)
             citation << ", #{pub_date}."
-        elsif !pub_date.blank? && pub_info.blank?
+        elsif !pub_date.blank? && pub_info.blank? && sound_info.nil?
             citation << "#{pub_date}."
         end
         unless citation.blank?
@@ -506,7 +518,7 @@ module Blacklight::Marc::DocumentExport
                 c_value = pub_date.find {|s| s.code == 'c'}.value unless pub_date.find {|s| s.code == 'c'}.value.blank?
                 date_value_twoOrThree = c_value.match(/(\d{2,3}[\-?u|\s]{1,2})/) unless c_value.match(/([\d]{2,3}[\-?u|\s])/).blank?
                 date_value_betweenFourDigits = c_value.include? "between"
-                date_value_fourDigit = (c_value.match(/$[\d]{4}/) || c_value.match(/[\d]{4}-[\d]{2,4}/)) unless c_value.match(/[\d]{4}/).blank?
+                date_value_fourDigit = (c_value.match(/$[\d]{4}/) || c_value.match(/[\d]{4}-[\d]{2,4}/) || c_value.match(/[\d]{4}-/)) unless c_value.match(/[\d]{4}/).blank?
                 if date_value_fourDigit.present?
                     date_value = date_value_fourDigit unless date_value_fourDigit.blank?
                 elsif date_value_betweenFourDigits
@@ -553,7 +565,30 @@ module Blacklight::Marc::DocumentExport
         end
         return nil if text.strip.blank?
         clean_end_punctuation(text.strip)
+    end
 
+    def is_sound_disc(record)
+        title_field = record.find {|f| f.tag == '245'}
+        if !title_field.nil?
+            medium_info = title_field.find {|s| s.code == 'h'}
+            medium_info = clean_end_punctuation(medium_info.value.strip) unless medium_info.nil?
+        end
+        format_field = record.find {|f| f.tag == '300'}
+        if !format_field.nil?
+            sound_info = format_field.find {|s| s.code == 'a'}
+            sound_info = clean_end_punctuation(sound_info.value.strip) unless sound_info.nil?
+        end
+        medium_info.include?("sound recording") unless medium_info.nil? || sound_info.include?("sound discs") unless sound_info.nil?
+    end
+
+    def physical_description_sound(record)
+        format_field = record.find {|f| f.tag == '300'}
+        if !format_field.nil?
+            sound_info = format_field.find {|s| s.code == 'a'}
+            sound_info = clean_end_punctuation(sound_info.value.strip) unless sound_info.nil?
+        end
+        return nil if sound_info.strip.nil? || !is_sound_disc(record)
+        clean_end_punctuation(sound_info.strip)
     end
 
     def volumes_info(record)
@@ -561,8 +596,8 @@ module Blacklight::Marc::DocumentExport
         if !volumes_info_field.nil?
             volume_info = volumes_info_field.find {|s| s.code == 'a'}
             volumes = volume_info.value.match(/(\d\svolumes)/) unless volume_info.value.match(/(\d\svolumes)/).blank?
-            volumes = clean_end_punctuation(volumes.to_s.strip) unless volumes.nil?
         end
+        volumes = clean_end_punctuation(volumes.to_s.strip) unless volumes.nil?
     end
 
     def mla_citation_title(text)
@@ -609,9 +644,14 @@ module Blacklight::Marc::DocumentExport
             end
             text += b_title_info unless b_title_info.nil?
         end
+        series_title_field = record.find {|f| f.tag == '490'}
+        if !series_title_field.nil?
+            series_title_info = series_title_field.find {|s| s.code == 'a'}
+            series_title_info = clean_end_punctuation(series_title_info.value.strip) unless series_title_info.nil?
+        end
+        text += ". " + series_title_info unless series_title_info.nil?
         return nil if text.strip.blank?
         clean_end_punctuation(text.strip) + "."
-
     end
 
     def clean_end_punctuation(text)
