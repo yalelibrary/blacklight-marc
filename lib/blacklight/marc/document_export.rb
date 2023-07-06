@@ -31,7 +31,6 @@ module Blacklight::Marc::DocumentExport
     def export_as_marcxml
         to_marc.to_xml.to_s
     end
-
     alias_method :export_as_xml, :export_as_marcxml
 
     def export_as_archives
@@ -43,15 +42,15 @@ module Blacklight::Marc::DocumentExport
     # is in-line with what we had before, but at least now attached
     # to the document extension where it belongs.
     def export_as_apa_citation_txt
-        apa_citation(to_marc)
+        apa_citation( to_marc )
     end
 
     def export_as_mla_citation_txt
-        mla_citation(to_marc)
+        mla_citation( to_marc )
     end
 
     def export_as_chicago_citation_txt
-        chicago_citation(to_marc)
+        chicago_citation( to_marc )
     end
 
     # Exports as an OpenURL KEV (key-encoded value) query string.
@@ -63,13 +62,13 @@ module Blacklight::Marc::DocumentExport
     # for now for backwards compatibilty, but should be replaced by
     # just ruby OpenURL.
     def export_as_openurl_ctx_kev(format = nil)
-        title = to_marc.find {|field| field.tag == '245'}
-        author = to_marc.find {|field| field.tag == '100'}
-        corp_author = to_marc.find {|field| field.tag == '110'}
-        publisher_info = to_marc.find {|field| field.tag == '260'}
-        edition = to_marc.find {|field| field.tag == '250'}
-        isbn = to_marc.find {|field| field.tag == '020'}
-        issn = to_marc.find {|field| field.tag == '022'}
+        title = to_marc.find{|field| field.tag == '245'}
+        author = to_marc.find{|field| field.tag == '100'}
+        corp_author = to_marc.find{|field| field.tag == '110'}
+        publisher_info = to_marc.find{|field| field.tag == '260'}
+        edition = to_marc.find{|field| field.tag == '250'}
+        isbn = to_marc.find{|field| field.tag == '020'}
+        issn = to_marc.find{|field| field.tag == '022'}
         unless format.nil?
             format.is_a?(Array) ? format = format[0].downcase.strip : format = format.downcase.strip
         end
@@ -95,7 +94,7 @@ module Blacklight::Marc::DocumentExport
         else
             export_text << "ctx_ver=Z39.88-2004&amp;rft_val_fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Adc&amp;rfr_id=info%3Asid%2Fblacklight.rubyforge.org%3Agenerator&amp;"
             export_text << "rft.title=" + ((title.nil? or title['a'].nil?) ? "" : CGI::escape(title['a']))
-            export_text << ((title.nil? or title['b'].nil?) ? "" : CGI.escape(" ") + CGI::escape(title['b']))
+            export_text <<  ((title.nil? or title['b'].nil?) ? "" : CGI.escape(" ") + CGI::escape(title['b']))
             export_text << "&amp;rft.creator=" + ((author.nil? or author['a'].nil?) ? "" : CGI::escape(author['a']))
             export_text << "&amp;rft.aucorp=#{CGI::escape(corp_author['a']) if corp_author['a']}+#{CGI::escape(corp_author['b']) if corp_author['b']}" unless corp_author.blank?
             export_text << "&amp;rft.date=" + ((publisher_info.nil? or publisher_info['c'].nil?) ? "" : CGI::escape(publisher_info['c']))
@@ -113,10 +112,10 @@ module Blacklight::Marc::DocumentExport
     # proprietary marc-ish in text/plain format. See
     # http://robotlibrarian.billdueber.com/sending-marcish-data-to-refworks/
     def export_as_refworks_marc_txt
-        fields = to_marc.find_all {|f| ('000'..'999') === f.tag}
+        fields = to_marc.find_all { |f| ('000'..'999') === f.tag }
         text = "LEADER #{to_marc.leader}"
         fields.each do |field|
-            unless ["940", "999"].include?(field.tag)
+            unless ["940","999"].include?(field.tag)
                 if field.is_a?(MARC::ControlField)
                     text << "#{field.tag}    #{field.value}\n"
                 else
@@ -150,20 +149,20 @@ module Blacklight::Marc::DocumentExport
     # purpose.
     def export_as_endnote
         end_note_format = {
-            "%A" => "author",
-            "%C" => "pub_place",
-            "%D" => "pub_date",
-            "%E" => "add_entry",
-            "%I" => "publisher",
-            "%@" => "isbn",
-            "%_@" => "issn",
-            "%S" => "series",
-            "%T" => "title",
-            "%P" => "num_pages",
-            "%U" => "url",
-            "%7" => "edition",
-            # nowhere to put scale, so use notes in %Z
-            "%Z" => "scale",
+          "%A" => "author",
+          "%C" => "pub_place",
+          "%D" => "pub_date",
+          "%E" => "add_entry",
+          "%I" => "publisher",
+          "%@" => "isbn",
+          "%_@" => "issn",
+          "%S" => "series",
+          "%T" => "title",
+          "%P" => "num_pages",
+          "%U" => "url",
+          "%7" => "edition",
+          # nowhere to put scale, so use notes in %Z
+          "%Z" => "scale",
         }
 
         # convert marc data to object hash
@@ -176,7 +175,7 @@ module Blacklight::Marc::DocumentExport
         # all marc_object fields and put them into string
         # Each marc_object could have 0 or more strings in array
 
-        end_note_format.each do |endnote_key, doc_key|
+        end_note_format.each do |endnote_key,doc_key|
             doc_object[doc_key].each do |doc_value|
                 text << "#{endnote_key} #{doc_value}\n"
             end
@@ -186,20 +185,20 @@ module Blacklight::Marc::DocumentExport
 
     def to_ris_text
         ris_format = {
-            "AU" => "author",
-            "CY" => "pub_place",
-            "PY" => "pub_date",
-            "TA" => "add_entry",
-            "PB" => "publisher",
-            # could be either, not sure if will cause problems
-            "SN" => "issn",
-            "M1" => "series",
-            "T1" => "title",
-            "EP" => "num_pages",
-            "UR" => "url",
-            "ET" => "edition",
-            # nowhere to put scale, so use notes in %Z
-            "N1" => "scale",
+          "AU" => "author",
+          "CY" => "pub_place",
+          "PY" => "pub_date",
+          "TA" => "add_entry",
+          "PB" => "publisher",
+          # could be either, not sure if will cause problems
+          "SN" => "issn",
+          "M1" => "series",
+          "T1" => "title",
+          "EP" => "num_pages",
+          "UR" => "url",
+          "ET" => "edition",
+          # nowhere to put scale, so use notes in %Z
+          "N1" => "scale",
         }
 
         # convert marc data to object hash
@@ -212,7 +211,7 @@ module Blacklight::Marc::DocumentExport
         # all doc_object fields and put them into string
         # Each doc_object could have 0 or more strings in array
 
-        ris_format.each do |ris_key, obj_key|
+        ris_format.each do |ris_key,obj_key|
             doc_object[obj_key].each do |obj_value|
                 text << "#{ris_key}  - #{obj_value}\n"
             end
@@ -224,18 +223,18 @@ module Blacklight::Marc::DocumentExport
 
     def export_as_refworks_archives
         archives_refworks_format = {
-            "RT" => "format",
-            "A1" => "author",
-            # could be either, not sure if will cause problems
-            "JF" => "find_in",
-            "VO" => "volume", #Volume container
-            "T1" => "title",
-            "UL" => "url",
-            "RD" => "retrieved_day"
+          "RT" => "format",
+          "A1" => "author",
+          # could be either, not sure if will cause problems
+          "JF" => "find_in",
+          "VO" => "volume", #Volume container
+          "T1" => "title",
+          "UL" => "url",
+          "RD" => "retrieved_day"
         }
         aspace_object = to_aspace
-        text = "\n"
-        archives_refworks_format.each do |refworks_key, aspace_key|
+        text ="\n"
+        archives_refworks_format.each do |refworks_key,aspace_key|
             aspace_object[aspace_key].each do |aspace_val|
                 text << "#{refworks_key}  #{aspace_val}\n"
             end
@@ -279,7 +278,7 @@ module Blacklight::Marc::DocumentExport
             end
             text += authors_final.join
             unless text.blank?
-                if text[-1, 1] != "."
+                if text[-1,1] != "."
                     text += ". "
                 else
                     text += " "
@@ -299,11 +298,11 @@ module Blacklight::Marc::DocumentExport
         text += edition_data + " " unless edition_data.nil?
 
         # Publication
-        text += setup_pub_info(record) unless setup_pub_info(record).nil?
+        text += setup_pub_info(record) + ", " unless setup_pub_info(record).nil?
 
         # Get Pub Date
-        text += + ", " + setup_pub_date(record) unless setup_pub_date(record).empty?
-        if text[-1, 1] != "."
+        text += setup_pub_date(record) unless setup_pub_date(record).nil?
+        if text[-1,1] != "."
             text += "." unless text.nil? or text.blank?
         end
         text
@@ -330,14 +329,14 @@ module Blacklight::Marc::DocumentExport
         end
         text += authors_list_final.join
         unless text.blank?
-            if text[-1, 1] != "."
+            if text[-1,1] != "."
                 text += ". "
             else
                 text += " "
             end
         end
         # Get Pub Date
-        text += "(" + setup_pub_date(record) + "). " unless setup_pub_date(record).empty?
+        text += "(" + setup_pub_date(record) + "). " unless setup_pub_date(record).nil?
 
         # setup title info
         title = setup_title_info(record)
@@ -350,7 +349,7 @@ module Blacklight::Marc::DocumentExport
         # Publisher info
         text += setup_pub_info(record) unless setup_pub_info(record).nil?
         unless text.blank?
-            if text[-1, 1] != "."
+            if text[-1,1] != "."
                 text += "."
             end
         end
@@ -368,7 +367,7 @@ module Blacklight::Marc::DocumentExport
         author_text = ""
         unless authors[:primary_authors].blank?
             if authors[:primary_authors].length > 10
-                authors[:primary_authors].each_with_index do |author, index|
+                authors[:primary_authors].each_with_index do |author,index|
                     if index < 7
                         if index == 0
                             author_text << "#{author}"
@@ -384,7 +383,7 @@ module Blacklight::Marc::DocumentExport
                 end
                 author_text << " et al."
             elsif authors[:primary_authors].length > 1
-                authors[:primary_authors].each_with_index do |author, index|
+                authors[:primary_authors].each_with_index do |author,index|
                     if index == 0
                         author_text << "#{author}"
                         if author.ends_with?(",")
@@ -415,14 +414,14 @@ module Blacklight::Marc::DocumentExport
 
             unless temp_authors.blank?
                 if temp_authors.length > 10
-                    temp_authors.each_with_index do |author, index|
+                    temp_authors.each_with_index do |author,index|
                         if index < 7
                             author_text << "#{author.first} #{author.last} "
                         end
                     end
                     author_text << " et al."
                 elsif temp_authors.length > 1
-                    temp_authors.each_with_index do |author, index|
+                    temp_authors.each_with_index do |author,index|
                         if index == 0
                             author_text << "#{author.first} #{author.last}, "
                         elsif index + 1 == temp_authors.length
@@ -438,7 +437,8 @@ module Blacklight::Marc::DocumentExport
         end
 
         # Get Pub Date
-        pub_date = setup_pub_date(record) unless setup_pub_date(record).nil?
+        pub_date = ""
+        pub_date = setup_pub_date(record)  unless setup_pub_date(record).nil?
 
         # Get volumes
 
@@ -447,9 +447,9 @@ module Blacklight::Marc::DocumentExport
 
 
         if !authors[:primary_authors].blank? and (!authors[:translators].blank? or !authors[:editors].blank? or !authors[:compilers].blank?)
-            additional_title << "Translated by #{authors[:translators].collect {|name| name_reverse(name)}.join(" and ")}. " unless authors[:translators].blank?
-            additional_title << "Edited by #{authors[:editors].collect {|name| name_reverse(name)}.join(" and ")}. " unless authors[:editors].blank?
-            additional_title << "Compiled by #{authors[:compilers].collect {|name| name_reverse(name)}.join(" and ")}. " unless authors[:compilers].blank?
+            additional_title << "Translated by #{authors[:translators].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:translators].blank?
+            additional_title << "Edited by #{authors[:editors].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:editors].blank?
+            additional_title << "Compiled by #{authors[:compilers].collect{|name| name_reverse(name)}.join(" and ")}. " unless authors[:compilers].blank?
         end
 
         edition = ""
@@ -459,29 +459,26 @@ module Blacklight::Marc::DocumentExport
 
 
         citation = ""
-        citation << "#{author_text} " unless author_text.blank?
+        citation << "#{author_text}. " unless author_text.blank?
 
         citation << "<i>#{title}</i> " unless title.blank?
         citation << "#{edition} " unless edition.blank?
 
-        p
-
         # add volumes information if not null
         volumes = volumes_info(record) unless volumes_info(record).blank?
-        volumes = volumes.gsub("volumes", "vols. ") unless volumes.nil?
+        volumes = volumes.gsub("volumes", "vols. ")
         citation << volumes unless volumes.blank?
-
 
         citation << "#{pub_info}" unless pub_info.blank?
         if (pub_date.blank? && !pub_info.blank?)
             citation << "."
         elsif (!pub_date.blank? && !pub_info.blank?)
             citation << ", #{pub_date}."
-        elsif !pub_date.blank? && pub_info.blank?
+        elsif !pub_date.blank?  && pub_info.blank?
             citation << "#{pub_date}."
         end
         unless citation.blank?
-            if citation[-1, 1] != "."
+            if citation[-1,1] != "."
                 citation += "."
             end
         end
@@ -490,59 +487,30 @@ module Blacklight::Marc::DocumentExport
 
 
     def setup_pub_date(record)
-        text = pub_date_26x(record, "264").present? ? pub_date_26x(record, "264") : (pub_date_26x(record, "260").present? ? pub_date_26x(record, "260") : "")
-        text
+        text = pub_date_26x(record,"264").present? ? pub_date_26x(record,"264") : (pub_date_26x(record,"260").present? ? pub_date_26x(record,"260") : "")
     end
 
     def setup_pub_info(record)
-        text = pub_info_26x(record, "264").present? ? pub_info_26x(record, "264") : (pub_info_26x(record, "260").present? ? pub_info_26x(record, "260") : "")
+        text = pub_info_26x(record,"264").present? ? pub_info_26x(record,"264") : (pub_info_26x(record,"260").present? ? pub_info_26x(record,"260") : "")
     end
 
     def pub_date_26x(record, field_26x)
-        date_value = ''
-        if !record.find {|f| f.tag == field_26x}.nil?
-            pub_date = record.find {|f| f.tag == field_26x}
-            unless !pub_date.find {|s| s.code == 'c'}
-                c_value = pub_date.find {|s| s.code == 'c'}.value unless pub_date.find {|s| s.code == 'c'}.value.blank?
-                date_value_twoOrThree = c_value.match(/(\d{2,3}[\-?u|\s]{1,2})/) unless c_value.match(/([\d]{2,3}[\-?u|\s])/).blank?
-                date_value_betweenFourDigits = c_value.include? "between"
-                date_value_fourDigit = (c_value.match(/$[\d]{4}/) || c_value.match(/[\d]{4}-[\d]{2,4}/)) unless c_value.match(/[\d]{4}/).blank?
-                if date_value_fourDigit.present?
-                    date_value = date_value_fourDigit unless date_value_fourDigit.blank?
-                elsif date_value_betweenFourDigits
-                    dates = c_value.scan(/[\d]{4}/)
-                    date1 = dates[0].to_s
-                    date2 = dates[1].to_s
-                    date_value = "[" + date1 + "-" + date2 + "?]"
-                elsif date_value_twoOrThree.present?
-                    if date_value_twoOrThree[0].length == 5 and (date_value_twoOrThree[0].end_with?('-') || date_value_twoOrThree[0].end_with?('?'))
-                        date_value = date_value_twoOrThree[0][0..-2].gsub!(/\D/, '0') unless date_value_twoOrThree.nil?
-                    else
-                        date_value = date_value_twoOrThree[0].gsub!(/\D/, '0') unless date_value_twoOrThree.nil?
-                    end
-                    date_value = "[" + date_value + "?]" unless date_value.nil?
-                elsif date_value_betweenFourDigits.present?
-                    dates = date_value_betweenFourDigits.scan(/[\d]{4}/)
-                    date1 = dates[0].to_s
-                    date2 = date[1].to_s
-                    date_value = "[" + date1 + "-" + date2 + "?]"
-                else
-                    date_value = c_value.gsub(/[^0-9|n\.d\.]/, "")[0, 4] unless c_value.gsub(/[^0-9|n\.d\.]/, "")[0, 4].blank?
-                end
+        if !record.find{|f| f.tag == field_26x }.nil?
+            pub_date = record.find{|f| f.tag == field_26x}
+            if pub_date.find{|s| s.code == 'c'}
+                date_value = pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4] unless pub_date.find{|s| s.code == 'c'}.value.gsub(/[^0-9|n\.d\.]/, "")[0,4].blank?
             end
             return nil if date_value.nil?
         end
-        clean_end_punctuation(date_value.to_s) if date_value
-
+        clean_end_punctuation(date_value) if date_value
     end
-
 
     def pub_info_26x(record, field_26x)
         text = ''
-        pub_info_field = record.find {|f| f.tag == field_26x}
+        pub_info_field = record.find{|f| f.tag == field_26x}
         if !pub_info_field.nil?
-            a_pub_info = pub_info_field.find {|s| s.code == 'a'}
-            b_pub_info = pub_info_field.find {|s| s.code == 'b'}
+            a_pub_info = pub_info_field.find{|s| s.code == 'a'}
+            b_pub_info = pub_info_field.find{|s| s.code == 'b'}
             a_pub_info = clean_end_punctuation(a_pub_info.value.strip) unless a_pub_info.nil?
             b_pub_info = b_pub_info.value.strip unless b_pub_info.nil?
             text += a_pub_info.strip unless a_pub_info.nil?
@@ -557,16 +525,16 @@ module Blacklight::Marc::DocumentExport
     end
 
     def volumes_info(record)
-        volumes_info_field = record.find {|f| f.tag == '300'}
+        volumes_info_field = record.find{|f| f.tag == '300'}
         if !volumes_info_field.nil?
-            volume_info = volumes_info_field.find {|s| s.code == 'a'}
+            volume_info = volumes_info_field.find{|s| s.code == 'a'}
             volumes = volume_info.value.match(/(\d\svolumes)/) unless volume_info.value.match(/(\d\svolumes)/).blank?
             volumes = clean_end_punctuation(volumes.to_s.strip) unless volumes.nil?
         end
     end
 
     def mla_citation_title(text)
-        no_upcase = ["a", "an", "and", "but", "by", "for", "it", "of", "the", "to", "with"]
+        no_upcase = ["a","an","and","but","by","for","it","of","the","to","with"]
         new_text = []
         word_parts = text.split(" ")
         word_parts.each do |w|
@@ -582,12 +550,12 @@ module Blacklight::Marc::DocumentExport
     # This will replace the mla_citation_title method with a better understanding of how MLA and Chicago citation titles are formatted.
     # This method will take in a string and capitalize all of the non-prepositions.
     def citation_title(title_text)
-        prepositions = ["a", "about", "across", "an", "and", "before", "but", "by", "for", "it", "of", "the", "to", "with", "without"]
+        prepositions = ["a","about","across","an","and","before","but","by","for","it","of","the","to","with","without"]
         new_text = []
-        title_text.split(" ").each_with_index do |word, index|
+        title_text.split(" ").each_with_index do |word,index|
             if (index == 0 and word != word.upcase) or (word.length > 1 and word != word.upcase and !prepositions.include?(word))
                 # the split("-") will handle the capitalization of hyphenated words
-                new_text << word.split("-").map! {|w| w.capitalize}.join("-")
+                new_text << word.split("-").map!{|w| w.capitalize }.join("-")
             else
                 new_text << word
             end
@@ -597,10 +565,10 @@ module Blacklight::Marc::DocumentExport
 
     def setup_title_info(record)
         text = ''
-        title_info_field = record.find {|f| f.tag == '245'}
+        title_info_field = record.find{|f| f.tag == '245'}
         if !title_info_field.nil?
-            a_title_info = title_info_field.find {|s| s.code == 'a'}
-            b_title_info = title_info_field.find {|s| s.code == 'b'}
+            a_title_info = title_info_field.find{|s| s.code == 'a'}
+            b_title_info = title_info_field.find{|s| s.code == 'b'}
             a_title_info = clean_end_punctuation(a_title_info.value.strip) unless a_title_info.nil?
             b_title_info = clean_end_punctuation(b_title_info.value.strip) unless b_title_info.nil?
             text += a_title_info unless a_title_info.nil?
@@ -616,15 +584,15 @@ module Blacklight::Marc::DocumentExport
     end
 
     def clean_end_punctuation(text)
-        if [".", ",", ":", ";", "/"].include? text[-1, 1]
-            return text[0, text.length - 1]
+        if [".",",",":",";","/"].include? text[-1,1]
+            return text[0,text.length-1]
         end
         text
     end
 
     def setup_edition(record)
-        edition_field = record.find {|f| f.tag == '250'}
-        edition_code = edition_field.find {|s| s.code == 'a'} unless edition_field.nil?
+        edition_field = record.find{|f| f.tag == '250'}
+        edition_code = edition_field.find{|s| s.code == 'a'} unless edition_field.nil?
         edition_data = edition_code.value unless edition_code.nil?
         if edition_data.nil? or edition_data == '1st ed.'
             return nil
@@ -635,13 +603,13 @@ module Blacklight::Marc::DocumentExport
 
     def get_author_list(record)
         author_list = []
-        authors_primary = record.find {|f| f.tag == '100'}
-        author_primary = authors_primary.find {|s| s.code == 'a'}.value unless authors_primary.nil? rescue ''
+        authors_primary = record.find{|f| f.tag == '100'}
+        author_primary = authors_primary.find{|s| s.code == 'a'}.value unless authors_primary.nil? rescue ''
         author_list.push(clean_end_punctuation(author_primary)) unless author_primary.nil?
-        authors_secondary = record.find_all {|f| ('700') === f.tag}
+        authors_secondary = record.find_all{|f| ('700') === f.tag}
         if !authors_secondary.nil?
             authors_secondary.each do |l|
-                author_list.push(clean_end_punctuation(l.find {|s| s.code == 'a'}.value)) unless l.find {|s| s.code == 'a'}.value.nil?
+                author_list.push(clean_end_punctuation(l.find{|s| s.code == 'a'}.value)) unless l.find{|s| s.code == 'a'}.value.nil?
             end
         end
 
@@ -653,10 +621,10 @@ module Blacklight::Marc::DocumentExport
     def get_all_authors(record)
         translator_code = "trl"; editor_code = "edt"; compiler_code = "com"
         primary_authors = []; translators = []; editors = []; compilers = []
-        record.find_all {|f| f.tag === "100"}.each do |field|
+        record.find_all{|f| f.tag === "100" }.each do |field|
             primary_authors << field["a"] if field["a"]
         end
-        record.find_all {|f| f.tag === "700"}.each do |field|
+        record.find_all{|f| f.tag === "700" }.each do |field|
             if field["a"]
                 relators = []
                 relators << clean_end_punctuation(field["e"]) if field["e"]
@@ -668,7 +636,7 @@ module Blacklight::Marc::DocumentExport
                 elsif relators.include?(compiler_code)
                     compilers << field["a"]
                 else
-                    primary_authors << field["a"] unless primary_authors.include?(field["a"])
+                    primary_authors << field["a"]
                 end
             end
         end
@@ -678,7 +646,7 @@ module Blacklight::Marc::DocumentExport
     def abbreviate_name(name)
         name_parts = name.split(", ")
         first_name_parts = name_parts.last.split(" ")
-        temp_name = name_parts.first + ", " + first_name_parts.first[0, 1] + "."
+        temp_name = name_parts.first + ", " + first_name_parts.first[0,1] + "."
         first_name_parts.shift
         temp_name += " " + first_name_parts.join(" ") unless first_name_parts.empty?
         temp_name
@@ -699,29 +667,29 @@ module Blacklight::Marc::DocumentExport
     def to_object
         doc = {}
 
-        doc['isbn'] = record_to_array('020.a')
-        doc['issn'] = record_to_array('022.b')
-        doc['author'] = record_to_array('100.a')
-        doc['edition'] = record_to_array('250.a')
-        doc['scale'] = record_to_array('255.a')
-        doc['num_pages'] = record_to_array('300.a')
-        doc['cite_as'] = record_to_array('524.a')
-        doc['add_entry'] = record_to_array('700.a')
-        doc['url'] = record_to_array('856.u')
+        doc['isbn']       =   record_to_array('020.a')
+        doc['issn']       =   record_to_array('022.b')
+        doc['author']     =   record_to_array('100.a')
+        doc['edition']    =   record_to_array('250.a')
+        doc['scale']      =   record_to_array('255.a')
+        doc['num_pages']  =   record_to_array('300.a')
+        doc['cite_as']   =    record_to_array('524.a')
+        doc['add_entry'] =    record_to_array('700.a')
+        doc['url']       =    record_to_array('856.u')
 
         # Publisher, title, series could have multiple fields
         # So just join the arrays together
 
-        doc['pub_place'] = record_to_array('260.a') +
-            record_to_array('264.a')
-        doc['publisher'] = record_to_array('260.b') +
-            record_to_array('264.b')
-        doc['pub_date'] = record_to_array('260.c') +
-            record_to_array('264.c')
-        doc['title'] = record_to_array('245.a') +
-            record_to_array('245.b')
-        doc['series'] = record_to_array('440.a') +
-            record_to_array('490.a')
+        doc['pub_place'] =    record_to_array('260.a') +
+          record_to_array('264.a')
+        doc['publisher']  =   record_to_array('260.b') +
+          record_to_array('264.b')
+        doc['pub_date']   =   record_to_array('260.c') +
+          record_to_array('264.c')
+        doc['title']      =   record_to_array('245.a') +
+          record_to_array('245.b')
+        doc['series']     =   record_to_array('440.a') +
+          record_to_array('490.a')
 
         doc
     end
@@ -732,7 +700,7 @@ module Blacklight::Marc::DocumentExport
     def record_to_array(marc_field)
         record_values = []
         marc_field, sub_field = marc_field.split('.')
-        to_marc.find_all {|f| marc_field == f.tag}.each do |entry|
+        to_marc.find_all{|f| marc_field == f.tag}.each do |entry|
             unless entry[sub_field].nil?
                 record_values.push(entry[sub_field])
                 # or clean the record first
