@@ -1,6 +1,6 @@
 module BlacklightMarcHelper
 
-  # This method should move to BlacklightMarc in Blacklight 6.x
+  # Refwork tagged format: http://www.refworks.com/refworks/help/508help/RefWorks_Tagged_Format.htm
   def refworks_export_url params = {}, *_
     "https://www.refworks.com/express/expressimport.asp?vendor=#{CGI.escape(params[:vendor] || application_name)}&filter=#{CGI.escape(params[:filter] || "MARC Format")}&encoding=65001" + (("&url=#{CGI.escape(params[:url])}" if params[:url]) || "")
   end
@@ -10,11 +10,18 @@ module BlacklightMarcHelper
     "https://www.refworks.com/express/expressimport.asp?vendor=YUL&filter=RefWorks%20Tagged%20Format&encoding=65001"+ (("&url=#{CGI.escape(params[:url])}" if params[:url]) || "") #RIS
   end
 
+  # The URL of the dcs refworks
+  def dcs_export_url params = {}, *_
+    "https://www.refworks.com/express/expressimport.asp?vendor=YUL&filter=RefWorks%20Tagged%20Format&encoding=65001"+ (("&url=#{CGI.escape(params[:url])}" if params[:url]) || "") #RIS
+  end
+
   def refworks_solr_document_path opts = {}, *_
     if opts[:id]
       #refworks_export_url(url: solr_document_url(opts[:id], format: :refworks_marc_txt))
       if opts[:id].include? "repositories"
         archives_export_url(url: solr_document_url(opts[:id], format: :refworks_archives))
+      elsif opts[:id].start_with?("d")
+        dcs_export_url(url: solr_document_url(opts[:id], format: :refworks_dcs))
       else
         refworks_export_url(url: solr_document_url(opts[:id], format: :refworks_marc_txt))
       end
@@ -30,6 +37,8 @@ module BlacklightMarcHelper
   def single_refworks_catalog_path opts = {}, *_
     if opts[:id].include? "repositories"
       solr_document_path(opts.merge(format: 'refworks_archives'))
+    elsif opts[:id].start_with?("d")
+      solr_document_path(opts.merge(format: 'refworks_dcs'))
     else
       solr_document_path(opts.merge(format: 'refworks_marc_txt'))
     end
@@ -47,6 +56,18 @@ module BlacklightMarcHelper
     solr_document_path(opts.merge(format: 'ris_archives'))
   end
 
+  def single_dcs_catalog_path opts = {}, *_
+    solr_document_path(opts.merge(format: 'refworks_dcs'))
+  end
+
+  def single_dcs_endnote_catalog_path opts = {}, *_
+    solr_document_path(opts.merge(format: 'endnote_dcs'))
+  end
+
+  def single_dcs_ris_catalog_path opts = {}, *_
+    solr_document_path(opts.merge(format: 'ris_dcs'))
+  end
+
 
   # puts together a collection of documents into one refworks export string
   def render_refworks_texts(documents)
@@ -56,6 +77,8 @@ module BlacklightMarcHelper
         val += doc.export_as(:refworks_marc_txt) + "\n"
       elsif doc.exports_as? :refworks_archives
         val += doc.export_as(:refworks_archives) + "\n"
+      elsif doc.doc.exports_as? :refworks_dcs
+        val += doc.export_as(:refworks_dcs) + "\n"
       end
     end
     val
@@ -74,6 +97,7 @@ module BlacklightMarcHelper
   end
 
   # puts together a collection of documents into one archives endnote export string
+  # https://colab.mpdl.mpg.de/mediawiki/PubMan_Func_Spec_Endnote_Mapping
   def render_archives_endnote_texts(documents)
     val = ''
     documents.each do |doc|
@@ -136,4 +160,80 @@ module BlacklightMarcHelper
     end
     val
   end
+
+
+  # puts together a collection of documents into one dcs endnote export string
+  def render_dcs_endnote_texts(documents)
+    val = ''
+    documents.each do |doc|
+     dcs_endnote = {
+          "%0"  => "Digital Collections",
+          "%A" => doc['author_display'].present? ? doc['author_display'][0].to_s : doc['author_display'].to_s,
+          "%I" => doc['full_publisher_display']&.first,
+          "%C" => doc['creation_place_facet']&.to_s,
+          "%D" => doc['dcs_date_ss']&.first,
+          "%L" => doc['dcs_call_number_ss']&.first,
+          "%X" => doc['abstract_hl']&.to_s,
+          "%V" => doc['container_display'].present? ? doc['container_display'][0].to_s : doc['container_display'].to_s, #Volume container
+          "%T" => doc['title_display'].present? ? doc['title_display'][0].to_s : doc['title_display'].to_s,
+          "%U" => doc[:dcs_uri_s],
+          "%O" => Date.today
+      }
+      dcs_endnote.each {|key|
+        j_value = key[1].kind_of?(Array)? key[1][0].to_s : key[1].to_s
+        val << "#{key[0].to_s} #{j_value}\n" }
+      val << "\n"
+    end
+    val
+  end
+  # puts together a collection of documents into one dcs refworks export string
+  def render_dcs_texts(documents)
+    val = ''
+    documents.each do |doc|
+      dcs = {
+          "RT" => "Digital Collections",
+          "SR" => "Online",
+          "A1" => doc['author_display'],
+          "CN" => doc['dcs_call_number_ss']&.first,
+          "PB" => doc['full_publisher_display']&.first,
+          "YR" => doc['dcs_date_ss']&.first,
+          "PP" => doc['creation_place_facet']&.to_s,
+          "VO" => doc['container_display'].present? ? doc['container_display'][0].to_s : doc['container_display'].to_s, #Volume container
+          "T1" => doc['title_display'].present? ? doc['title_display'][0].to_s : doc['title_display'].to_s,
+          "AB" => doc['abstract_hl']&.to_s,
+          "UL" => doc[:dcs_uri_ss],
+          "RD" => Date.today
+      }
+      dcs.each {|key|
+        j_value = key[1].kind_of?(Array)? key[1][0].to_s : key[1].to_s
+        val << "#{key[0].to_s} #{j_value}\n" }
+      val << "\n"
+    end
+    val
+  end
+
+  # puts together a collection of documents into one dcs ris export string
+  def render_dcs_ris_texts(documents) # also can be used as refwork export
+    val = ''
+    documents.each do |doc|
+      dcs = {
+          "TY" => "Digital Collections",
+          "AU" => doc['author_display'].present? ? doc['author_display'][0].to_s : doc['author_display'].to_s,
+          "PB"=> doc['full_publisher_display']&.first,
+          "CY" => doc['creation_place_facet']&.to_s,
+          "PY" => doc['dcs_date_ss']&.first,
+          "VL"=> doc['container_display'].present? ? doc['container_display'][0].to_s : doc['container_display'].to_s, #Volume container
+          "T1"=> doc['title_display'].present? ? doc['title_display'][0].to_s : doc['title_display'].to_s,
+          "UR"=> doc[:dcs_uri_ss],
+          "Y2"=> Date.today
+      }
+      dcs.each {|key|
+        j_value = key[1].kind_of?(Array)? key[1][0].to_s : key[1].to_s
+        val << "#{key[0].to_s} - #{j_value}\n" }
+      val << "ER -\n"
+      val << "\n"
+    end
+    val
+  end
+
 end
