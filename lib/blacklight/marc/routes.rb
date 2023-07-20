@@ -37,6 +37,9 @@ module Blacklight::Marc
           get "catalog/archives", :as => "archives_solr_document"
           get "catalog/ris_archives", :as => "archives_ris_solr_document"
           get "catalog/endnote_archives", :as => "archives_endnote_solr_document"
+          get "catalog/dcs", :as => "dcs_solr_document"
+          get "catalog/ris_dcs", :as => "dcs_ris_solr_document"
+          get "catalog/endnote_dcs", :as => "dcs_endnote_solr_document"
         end
       end
       def archives
@@ -44,6 +47,7 @@ module Blacklight::Marc
           get "archives/archives", :as => "archives_solr_document"
         end
       end
+
    end
    
   include RouteSets
