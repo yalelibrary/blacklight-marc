@@ -150,20 +150,20 @@ module Blacklight::Marc::DocumentExport
     # purpose.
     def export_as_endnote
         end_note_format = {
-            "%A" => "author",
-            "%C" => "pub_place",
-            "%D" => "pub_date",
-            "%E" => "add_entry",
-            "%I" => "publisher",
-            "%@" => "isbn",
-            "%_@" => "issn",
-            "%S" => "series",
-            "%T" => "title",
-            "%P" => "num_pages",
-            "%U" => "url",
-            "%7" => "edition",
-            # nowhere to put scale, so use notes in %Z
-            "%Z" => "scale",
+          "%A" => "author",
+          "%C" => "pub_place",
+          "%D" => "pub_date",
+          "%E" => "add_entry",
+          "%I" => "publisher",
+          "%@" => "isbn",
+          "%_@" => "issn",
+          "%S" => "series",
+          "%T" => "title",
+          "%P" => "num_pages",
+          "%U" => "url",
+          "%7" => "edition",
+          # nowhere to put scale, so use notes in %Z
+          "%Z" => "scale",
         }
 
         # convert marc data to object hash
@@ -186,20 +186,20 @@ module Blacklight::Marc::DocumentExport
 
     def to_ris_text
         ris_format = {
-            "AU" => "author",
-            "CY" => "pub_place",
-            "PY" => "pub_date",
-            "TA" => "add_entry",
-            "PB" => "publisher",
-            # could be either, not sure if will cause problems
-            "SN" => "issn",
-            "M1" => "series",
-            "T1" => "title",
-            "EP" => "num_pages",
-            "UR" => "url",
-            "ET" => "edition",
-            # nowhere to put scale, so use notes in %Z
-            "N1" => "scale",
+          "AU" => "author",
+          "CY" => "pub_place",
+          "PY" => "pub_date",
+          "TA" => "add_entry",
+          "PB" => "publisher",
+          # could be either, not sure if will cause problems
+          "SN" => "issn",
+          "M1" => "series",
+          "T1" => "title",
+          "EP" => "num_pages",
+          "UR" => "url",
+          "ET" => "edition",
+          # nowhere to put scale, so use notes in %Z
+          "N1" => "scale",
         }
 
         # convert marc data to object hash
@@ -224,14 +224,14 @@ module Blacklight::Marc::DocumentExport
 
     def export_as_refworks_archives
         archives_refworks_format = {
-            "RT" => "format",
-            "A1" => "author",
-            # could be either, not sure if will cause problems
-            "JF" => "find_in",
-            "VO" => "volume", #Volume container
-            "T1" => "title",
-            "UL" => "url",
-            "RD" => "retrieved_day"
+          "RT" => "format",
+          "A1" => "author",
+          # could be either, not sure if will cause problems
+          "JF" => "find_in",
+          "VO" => "volume", #Volume container
+          "T1" => "title",
+          "UL" => "url",
+          "RD" => "retrieved_day"
         }
         aspace_object = to_aspace
         text = "\n"
@@ -752,15 +752,15 @@ module Blacklight::Marc::DocumentExport
         # So just join the arrays together
 
         doc['pub_place'] = record_to_array('260.a') +
-            record_to_array('264.a')
+          record_to_array('264.a')
         doc['publisher'] = record_to_array('260.b') +
-            record_to_array('264.b')
+          record_to_array('264.b')
         doc['pub_date'] = record_to_array('260.c') +
-            record_to_array('264.c')
+          record_to_array('264.c')
         doc['title'] = record_to_array('245.a') +
-            record_to_array('245.b')
+          record_to_array('245.b')
         doc['series'] = record_to_array('440.a') +
-            record_to_array('490.a')
+          record_to_array('490.a')
 
         doc
     end
