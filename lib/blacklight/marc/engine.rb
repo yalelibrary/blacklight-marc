@@ -20,6 +20,9 @@ module Blacklight::Marc
       Mime::Type.register_alias "text/html", :refworks_archives
       Mime::Type.register_alias "application/x-endnote-refer", :endnote_archives
       Mime::Type.register_alias "application/ris", :ris_archives
+      Mime::Type.register_alias "text/html", :refworks_dcs
+      Mime::Type.register_alias "application/x-endnote-refer", :endnote_dcs
+      Mime::Type.register_alias "application/ris", :ris_dcs
 
      end
   end
