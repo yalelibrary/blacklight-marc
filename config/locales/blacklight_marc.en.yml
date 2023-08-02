@@ -5,6 +5,7 @@ en:
       endnote: 'Export to EndNote'
       refworks: 'Export to Refworks'
       archives: 'Export to Archives'
+      dcs: 'Export Digital Collection Records'
 
 
     search:
