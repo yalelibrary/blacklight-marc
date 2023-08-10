@@ -1,7 +1,5 @@
-
 module BlacklightMarcHelper
-  require 'nokogiri'
-  require 'cgi'
+
 
   # Refwork tagged format: http://www.refworks.com/refworks/help/508help/RefWorks_Tagged_Format.htm
   def refworks_export_url params = {}, *_
