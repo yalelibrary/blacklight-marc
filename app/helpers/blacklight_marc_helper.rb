@@ -170,7 +170,7 @@ module BlacklightMarcHelper
      dcs_endnote = {
           "%0"  => doc['metadata_source_ss']&.include?('Voyager') ? "Book" : "Archives or Manuscripts",
           "%A" => doc['author_display'].present? ? doc['author_display'][0].to_s : doc['author_display'].to_s,
-          "%I"=> doc['found_in_labels_ss'].size > 2 ? doc['found_in_labels_ss'][-2].to_s: doc['found_in_labels_ss'].last.to_s,
+          "%O"=> doc['found_in_labels_ss'].size > 2 ? doc['found_in_labels_ss'][-2].to_s: doc['found_in_labels_ss'].last.to_s,
           "%C" => doc['creation_place_facet']&.to_s,
           "%D" => doc['dcs_date_ss']&.first,
           "%L" => doc['dcs_call_number_ss']&.first,
