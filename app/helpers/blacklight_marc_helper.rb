@@ -1,5 +1,6 @@
 module BlacklightMarcHelper
 
+
   # Refwork tagged format: http://www.refworks.com/refworks/help/508help/RefWorks_Tagged_Format.htm
   def refworks_export_url params = {}, *_
     "https://www.refworks.com/express/expressimport.asp?vendor=#{CGI.escape(params[:vendor] || application_name)}&filter=#{CGI.escape(params[:filter] || "MARC Format")}&encoding=65001" + (("&url=#{CGI.escape(params[:url])}" if params[:url]) || "")
@@ -167,16 +168,17 @@ module BlacklightMarcHelper
     val = ''
     documents.each do |doc|
      dcs_endnote = {
-          "%0"  => "Digital Collections",
+          "%0"  => doc['metadata_source_ss']&.include?('Voyager') ? "Book" : "Archives or Manuscripts",
           "%A" => doc['author_display'].present? ? doc['author_display'][0].to_s : doc['author_display'].to_s,
-          "%I" => doc['full_publisher_display']&.first,
+          "%I"=> doc['found_in_labels_ss'].size > 2 ? doc['found_in_labels_ss'][-2].to_s: doc['found_in_labels_ss'].last.to_s,
           "%C" => doc['creation_place_facet']&.to_s,
           "%D" => doc['dcs_date_ss']&.first,
           "%L" => doc['dcs_call_number_ss']&.first,
           "%X" => doc['abstract_hl']&.to_s,
           "%V" => doc['container_display'].present? ? doc['container_display'][0].to_s : doc['container_display'].to_s, #Volume container
-          "%T" => doc['title_display'].present? ? doc['title_display'][0].to_s : doc['title_display'].to_s,
-          "%U" => doc[:dcs_uri_s],
+          "%T" => doc['title_display'].present? ? doc['title_display'][0].to_s :  doc['title_display'].to_s,
+          "%U" => doc[:dcs_uri_ss],
+          "%9" => doc[:format].first,
           "%O" => Date.today
       }
       dcs_endnote.each {|key|
@@ -186,6 +188,7 @@ module BlacklightMarcHelper
     end
     val
   end
+
   # puts together a collection of documents into one dcs refworks export string
   def render_dcs_texts(documents)
     val = ''
@@ -217,7 +220,7 @@ module BlacklightMarcHelper
     val = ''
     documents.each do |doc|
       dcs = {
-          "TY" => "Digital Collections",
+          "TY" => doc['metadata_source_ss']&.include?('Voyager') ? "Book" : "Archives or Manuscripts",
           "AU" => doc['author_display'].present? ? doc['author_display'][0].to_s : doc['author_display'].to_s,
           "PB"=> doc['full_publisher_display']&.first,
           "CY" => doc['creation_place_facet']&.to_s,
