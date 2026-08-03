@@ -585,9 +585,10 @@ module Blacklight::Marc::DocumentExport
         format_field = record.find {|f| f.tag == '300'}
         if !format_field.nil?
             sound_info = format_field.find {|s| s.code == 'a'}
-            sound_info = clean_end_punctuation(sound_info.value.strip) unless sound_info.nil?
+            return nil if sound_info.nil?
+            sound_info = clean_end_punctuation(sound_info.value.strip)
         end
-        return nil if sound_info.strip.nil? || !is_sound_disc(record)
+        return nil if sound_info.try(:strip).nil? || !is_sound_disc(record)
         clean_end_punctuation(sound_info.strip)
     end
 
